@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <item name="ngs_map_icon_container" type="id" />
+    <item name="ngs_chat_icon_container" type="id" />
+    <item name="ngs_camera_icon_container" type="id" />
+    <item name="ngs_community_icon_container" type="id" />
+    <item name="ngs_spotlight_icon_container" type="id" />
+</resources>

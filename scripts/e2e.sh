@@ -12,6 +12,7 @@ ZEN=com.zenecran
 SVC=com.zenecran/com.zenecran.service.GuardService
 IG=com.instagram.android
 FB=com.facebook.katana
+SC=com.snapchat.android
 
 log() { echo "$*" | tee -a "$R"; }
 ok() { PASS=$((PASS + 1)); log "- ✅ $*"; }
@@ -30,7 +31,7 @@ wait_log() { # motif, délai (s)
 }
 top() { adb shell dumpsys activity activities | grep -m1 -E "topResumedActivity|mResumedActivity"; }
 shot() { adb exec-out screencap -p > "$OUT/$1.png"; }
-stop_fakes() { adb shell am force-stop $IG; adb shell am force-stop $FB; }
+stop_fakes() { adb shell am force-stop $IG; adb shell am force-stop $FB; adb shell am force-stop $SC; }
 
 svc_off() {
     adb shell settings delete secure enabled_accessibility_services > /dev/null
@@ -64,6 +65,7 @@ adb shell svc power stayon true
 adb install -r app/build/outputs/apk/debug/app-debug.apk | tail -1
 adb install -r fake-instagram/build/outputs/apk/debug/fake-instagram-debug.apk | tail -1
 adb install -r fake-facebook/build/outputs/apk/debug/fake-facebook-debug.apk | tail -1
+adb install -r fake-snapchat/build/outputs/apk/debug/fake-snapchat-debug.apk | tail -1
 adb shell appops set $ZEN GET_USAGE_STATS allow
 adb shell dumpsys deviceidle whitelist +$ZEN > /dev/null
 adb shell settings put system screen_off_timeout 1800000
@@ -143,6 +145,22 @@ feature_test ig_stories "$IG/.StoryActivity" "Stories Instagram"
 feature_test fb_stories "$FB/.StoryViewerActivity" "Stories Facebook"
 feature_test fb_reels "$FB/.ReelsTabActivity" "Onglet Reels Facebook"
 feature_test fb_reels "$FB/.ReelsViewerActivity" "Lecteur Reels Facebook (structure)"
+
+section "Snapchat : onglets Stories et Spotlight renvoyés vers le Chat"
+set_config '{"rules":{"sc_stories":{"e":true,"b":0},"sc_spotlight":{"e":true,"b":0}},"diag":true}'
+adb shell am start -W -n $SC/.MainActivity --es tab Chat > /dev/null
+sleep 6
+has_log "BLOCK_FEATURE" && ko "blocage sur l'onglet Chat (faux positif)" || ok "l'onglet Chat reste utilisable"
+adb shell am start -W -n $SC/.MainActivity --es tab Stories > /dev/null
+if wait_log "BLOCK_FEATURE id=sc_stories action=redirect" 8; then ok "onglet Stories détecté, renvoi vers le Chat"; else ko "onglet Stories NON détecté"; adb logcat -d -s ZenEcran:I | grep -E "BLOCK| DUMP " | tail -25 | sed 's/.*ZenEcran: /    /' >> "$R"; fi
+sleep 2
+adb logcat -d -s FakeSnap:I | tail -1 | grep -q "TAB=Chat" && ok "Faux Snapchat est revenu sur le Chat" || ko "pas revenu sur le Chat ($(adb logcat -d -s FakeSnap:I | tail -1))"
+shot 05_snap_apres_stories
+adb logcat -c
+python3 scripts/tap.py "Spotlight" > /dev/null
+if wait_log "BLOCK_FEATURE id=sc_spotlight action=redirect" 8; then ok "appui sur Spotlight renvoyé vers le Chat"; else ko "onglet Spotlight NON détecté"; fi
+sleep 2
+adb logcat -d -s FakeSnap:I | tail -1 | grep -q "TAB=Chat" && ok "revenu sur le Chat après Spotlight" || ko "pas revenu sur le Chat après Spotlight"
 
 section "Pas de faux positif"
 set_config '{"rules":{"ig_reels":{"e":true,"b":0},"ig_stories":{"e":true,"b":0},"fb_reels":{"e":true,"b":0},"fb_stories":{"e":true,"b":0},"fb_video":{"e":true,"b":0}}}'

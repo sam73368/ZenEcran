@@ -272,12 +272,7 @@ fun SettingsScreen(vm: MainViewModel, padding: PaddingValues) {
                                 vm.say("Capture copiée.")
                             }) { Text("Copier") }
                             Button(
-                                onClick = {
-                                    val send = android.content.Intent(android.content.Intent.ACTION_SEND)
-                                        .setType("text/plain")
-                                        .putExtra(android.content.Intent.EXTRA_TEXT, dump)
-                                    ctx.startActivity(android.content.Intent.createChooser(send, "Partager la capture"))
-                                },
+                                onClick = { shareDumpFile(ctx, sel, labelOf[sel] ?: sel, dump) },
                                 colors = ButtonDefaults.buttonColors(containerColor = Z.teal, contentColor = Z.onTeal),
                             ) { Text("Partager") }
                         }
@@ -347,4 +342,25 @@ private fun StrictDialog(onDismiss: () -> Unit, onConfirm: () -> Unit) {
         confirmButton = { TextButton(onClick = onConfirm) { Text("Oui, je m'engage") } },
         dismissButton = { TextButton(onClick = onDismiss) { Text("Annuler") } },
     )
+}
+
+/** Partage la capture sous forme de fichier .txt (au lieu d'un long texte collé). */
+private fun shareDumpFile(ctx: android.content.Context, pkg: String, label: String, dump: String) {
+    try {
+        val dir = java.io.File(ctx.cacheDir, "diagnostic").apply { mkdirs() }
+        val safe = label.replace(Regex("[^A-Za-z0-9_-]"), "_").ifEmpty { "appli" }
+        val stamp = java.text.SimpleDateFormat("yyyyMMdd-HHmm", java.util.Locale.US).format(java.util.Date())
+        val file = java.io.File(dir, "zen-diagnostic-$safe-$stamp.txt")
+        file.writeText("Zen Écran — capture du mode diagnostic\n$pkg\n\n$dump")
+        val uri = androidx.core.content.FileProvider.getUriForFile(ctx, "${ctx.packageName}.files", file)
+        val send = android.content.Intent(android.content.Intent.ACTION_SEND)
+            .setType("text/plain")
+            .putExtra(android.content.Intent.EXTRA_STREAM, uri)
+            .putExtra(android.content.Intent.EXTRA_SUBJECT, file.name)
+            .addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        send.clipData = android.content.ClipData.newRawUri(file.name, uri)
+        ctx.startActivity(android.content.Intent.createChooser(send, "Partager la capture (.txt)"))
+    } catch (e: Exception) {
+        android.widget.Toast.makeText(ctx, "Partage impossible : ${e.message}", android.widget.Toast.LENGTH_LONG).show()
+    }
 }

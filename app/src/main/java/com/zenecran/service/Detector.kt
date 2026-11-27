@@ -36,11 +36,18 @@ object Detector {
             if (ctx.roots.any { r -> d.ids.any { id -> visibleById(r, fullId(ctx.pkg, id)) } }) found += d
         }
 
-        // 3) Descriptions, onglets sélectionnés, structure vidéo : un seul parcours de l'arbre
+        // 2 bis) Onglet actif repéré par son identifiant
+        for (d in defs) {
+            if (d in found || d.selectedIds.isEmpty()) continue
+            if (ctx.roots.any { r -> d.selectedIds.any { id -> selectedById(r, fullId(ctx.pkg, id)) } }) found += d
+        }
+
+        // 3) Descriptions, titres, onglets sélectionnés, structure vidéo : un seul parcours de l'arbre
         val rest = defs.filter {
             it !in found && (it.descs.isNotEmpty() || it.selectedPrefixes.isNotEmpty() ||
-                it.selectedLabels.isNotEmpty() || it.fullscreenVideo)
+                it.selectedLabels.isNotEmpty() || it.fullscreenVideo || it.titles.isNotEmpty())
         }
+        val rect = Rect()
         if (rest.isEmpty()) return found.toList()
 
         val wantVideo = rest.filter { it.fullscreenVideo }
@@ -56,6 +63,8 @@ object Detector {
                 for (d in rest) {
                     if (d in found) continue
                     if (desc != null && d.descs.any { desc.equals(it, ignoreCase = true) }) {
+                        found += d
+                    } else if (txt != null && d.titles.any { txt.trim().equals(it, ignoreCase = true) } && isTop(n, ctx, rect)) {
                         found += d
                     } else if (n.isSelected && (
                             d.selectedPrefixes.any { p -> desc?.startsWith(p, true) == true || txt?.startsWith(p, true) == true } ||
@@ -81,6 +90,40 @@ object Detector {
         root.findAccessibilityNodeInfosByViewId(full).any { it.isVisibleToUser }
     } catch (e: Exception) {
         false
+    }
+
+    private fun selectedById(root: AccessibilityNodeInfo, full: String): Boolean = try {
+        root.findAccessibilityNodeInfosByViewId(full).any { it.isVisibleToUser && it.isSelected }
+    } catch (e: Exception) {
+        false
+    }
+
+    /** L'élément est dans le haut de l'écran (zone du titre de l'onglet). */
+    private fun isTop(n: AccessibilityNodeInfo, ctx: ScreenCtx, r: Rect): Boolean {
+        n.getBoundsInScreen(r)
+        return r.top < ctx.screenH * 0.22f
+    }
+
+    /** Appuie sur le bouton qui porte cet identifiant (ou sur son parent appuyable). */
+    fun clickById(ctx: ScreenCtx, id: String): Boolean {
+        for (r in ctx.roots) {
+            val nodes = try {
+                r.findAccessibilityNodeInfosByViewId(fullId(ctx.pkg, id))
+            } catch (e: Exception) {
+                emptyList()
+            }
+            for (n in nodes) {
+                if (!n.isVisibleToUser) continue
+                var cur: AccessibilityNodeInfo? = n
+                var hops = 0
+                while (cur != null && hops < 4) {
+                    if (cur.performAction(AccessibilityNodeInfo.ACTION_CLICK)) return true
+                    cur = cur.parent
+                    hops++
+                }
+            }
+        }
+        return false
     }
 
     private fun isBig(n: AccessibilityNodeInfo, ctx: ScreenCtx): Boolean {

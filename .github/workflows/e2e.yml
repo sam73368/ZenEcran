@@ -35,7 +35,7 @@ jobs:
           gradle-version: 8.10.2
 
       - name: Compiler l'appli et les fausses applis
-        run: gradle :app:assembleDebug :fake-instagram:assembleDebug :fake-facebook:assembleDebug --no-daemon
+        run: gradle :app:assembleDebug :fake-instagram:assembleDebug :fake-facebook:assembleDebug :fake-snapchat:assembleDebug --no-daemon
 
       - name: Activer KVM
         run: |

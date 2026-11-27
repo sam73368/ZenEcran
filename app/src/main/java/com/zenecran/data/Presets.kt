@@ -10,6 +10,9 @@ data class AppDef(val pkg: String, val label: String)
  *  - selectedLabels : un élément SÉLECTIONNÉ dont la description/le texte contient ce mot
  *  - activities : l'écran (activité Android) ouvert contient ce nom (ex. "StoryViewerActivity")
  *  - fullscreenVideo : un lecteur vidéo plein écran qui défile (structure des Reels Facebook)
+ *  - titles : un texte visible en HAUT de l'écran (titre de l'onglet) égal à ce mot, ex. « Stories »
+ *  - selectedIds : un élément avec cet identifiant qui est SÉLECTIONNÉ (onglet actif de la barre du bas)
+ * Action : redirectId = identifiant d'un bouton sur lequel appuyer (ex. l'onglet Chat) au lieu de faire « retour ».
  * Ces repères dépendent des versions des applis : le Mode diagnostic permet de les vérifier.
  */
 data class FeatureDef(
@@ -23,6 +26,9 @@ data class FeatureDef(
     val selectedLabels: List<String> = emptyList(),
     val activities: List<String> = emptyList(),
     val fullscreenVideo: Boolean = false,
+    val titles: List<String> = emptyList(),
+    val selectedIds: List<String> = emptyList(),
+    val redirectId: String? = null,
     val experimental: Boolean = false,
 )
 
@@ -93,13 +99,19 @@ object Presets {
         // ---------------- Snapchat
         FeatureDef(
             id = "sc_spotlight", pkg = "com.snapchat.android",
-            title = "Spotlight", subtitle = "Fil de vidéos Spotlight",
+            title = "Spotlight", subtitle = "Onglet Spotlight (renvoie vers le Chat)",
             ids = listOf("spotlight_container"),
+            titles = listOf("Spotlight"),
+            selectedIds = listOf("ngs_spotlight_icon_container"),
+            redirectId = "ngs_chat_icon_container",
         ),
         FeatureDef(
             id = "sc_stories", pkg = "com.snapchat.android",
-            title = "Stories", subtitle = "Lecteur de stories (amis et Discover)",
+            title = "Stories", subtitle = "Onglet Stories et lecteur de stories (renvoie vers le Chat)",
             ids = listOf("opera_viewer"),
+            titles = listOf("Stories"),
+            selectedIds = listOf("ngs_community_icon_container"),
+            redirectId = "ngs_chat_icon_container",
         ),
         // ---------------- YouTube
         FeatureDef(

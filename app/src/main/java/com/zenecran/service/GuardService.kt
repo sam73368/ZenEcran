@@ -443,13 +443,14 @@ class GuardService : AccessibilityService() {
         // Laisse le temps au « retour » de faire son effet avant de re-vérifier.
         if (nowElapsed - lastFeatureAction < 1200) return
         val needActivity = countBudget && defs.any { it.activities.isNotEmpty() }
-        val hits = Detector.detect(screenFor(pkg, needActivity), defs)
+        val screen = screenFor(pkg, needActivity)
+        val hits = Detector.detect(screen, defs)
         if (hits.isEmpty()) return
         for (d in hits) {
             val rc = cfg.rules[d.id] ?: continue
             val used = Store.daily().featureSec[d.id] ?: 0
             if (rc.budgetMin == 0 || used >= rc.budgetMin * 60) {
-                enforceFeature(d, rc.budgetMin == 0)
+                enforceFeature(d, rc.budgetMin == 0, screen)
                 return
             }
         }
@@ -464,17 +465,19 @@ class GuardService : AccessibilityService() {
         }
     }
 
-    private fun enforceFeature(d: FeatureDef, hard: Boolean) {
+    private fun enforceFeature(d: FeatureDef, hard: Boolean, screen: ScreenCtx) {
         val now = SystemClock.elapsedRealtime()
-        // Si le « retour » n'a pas suffi juste avant, on renvoie à l'accueil.
+        // Si l'action n'a pas suffi juste avant, on renvoie à l'accueil.
         val repeated = now - lastFeatureAction < 5000 && lastFeatureId == d.id
         val goHome = repeated || !Store.config.value.featureBack
-        performGlobalAction(if (goHome) GLOBAL_ACTION_HOME else GLOBAL_ACTION_BACK)
+        // Onglet à éviter : on appuie directement sur un autre onglet (ex. Chat) au lieu de « retour ».
+        val redirected = !repeated && d.redirectId != null && Detector.clickById(screen, d.redirectId)
+        if (!redirected) performGlobalAction(if (goHome) GLOBAL_ACTION_HOME else GLOBAL_ACTION_BACK)
         lastFeatureAction = now
         lastFeatureId = d.id
         // L'activité mémorisée ne doit pas redéclencher le blocage si l'utilisateur est déjà ressorti.
         if (d.activities.isNotEmpty()) activityByPkg.remove(d.pkg)
-        Log.i(TAG, "BLOCK_FEATURE id=${d.id} action=${if (goHome) "home" else "back"}")
+        Log.i(TAG, "BLOCK_FEATURE id=${d.id} action=${if (redirected) "redirect" else if (goHome) "home" else "back"}")
         if (!repeated) {
             val appName = labelOf(d.pkg)
             val msg = if (hard) "${d.title} est bloqué sur $appName" else "Budget ${d.title} épuisé pour aujourd'hui"
