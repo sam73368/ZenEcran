@@ -4,6 +4,8 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.zenecran.data.CustomRule
+import com.zenecran.update.UpdateInfo
+import com.zenecran.update.Updater
 import com.zenecran.data.InstalledApp
 import com.zenecran.data.Schedule
 import com.zenecran.data.RuleConfig
@@ -29,6 +31,15 @@ data class UiState(
     val loaded: Boolean = false,
 )
 
+sealed interface UpdState {
+    data object Idle : UpdState
+    data object Checking : UpdState
+    data object UpToDate : UpdState
+    data class Available(val info: UpdateInfo) : UpdState
+    data class Downloading(val info: UpdateInfo, val progress: Float) : UpdState
+    data class Error(val msg: String) : UpdState
+}
+
 class MainViewModel(app: Application) : AndroidViewModel(app) {
     private val ctx = app.applicationContext
 
@@ -40,6 +51,45 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     @Volatile
     var visible = false
+
+    // ------------------------------------------------------------ mises à jour
+
+    private val _upd = MutableStateFlow<UpdState>(UpdState.Idle)
+    val upd: StateFlow<UpdState> = _upd.asStateFlow()
+
+    init {
+        checkUpdate(silent = true)
+    }
+
+    fun checkUpdate(silent: Boolean = false) {
+        if (_upd.value is UpdState.Checking || _upd.value is UpdState.Downloading) return
+        _upd.value = UpdState.Checking
+        viewModelScope.launch {
+            _upd.value = try {
+                Updater.check()?.let { UpdState.Available(it) } ?: UpdState.UpToDate
+            } catch (e: Exception) {
+                if (silent) UpdState.Idle else UpdState.Error(e.message ?: "Pas de connexion")
+            }
+        }
+    }
+
+    fun installUpdate(info: UpdateInfo) {
+        if (!Updater.canInstall(ctx)) {
+            messages.tryEmit("Autorise Zen Écran à installer des applis, puis appuie de nouveau sur Installer.")
+            Updater.openInstallPermission(ctx)
+            return
+        }
+        _upd.value = UpdState.Downloading(info, 0f)
+        viewModelScope.launch {
+            try {
+                val apk = Updater.download(ctx, info) { p -> _upd.value = UpdState.Downloading(info, p) }
+                Updater.install(ctx, apk)
+                _upd.value = UpdState.Available(info)
+            } catch (e: Exception) {
+                _upd.value = UpdState.Error(e.message ?: "Échec du téléchargement")
+            }
+        }
+    }
 
     fun refresh() {
         viewModelScope.launch(Dispatchers.Default) {

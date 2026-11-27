@@ -80,7 +80,9 @@ if wait_log "BLOCK_APP pkg=$IG reason=limit" 110; then
     top | grep -q $IG && ko "Faux Instagram encore au premier plan" || ok "retour à l'accueil"
 else
     ko "jamais bloqué après 110 s"
+    shot 01_echec_limite
 fi
+adb logcat -d -s ZenEcran:I | grep " FG " | tail -4 | sed 's/^/    /' >> "$R"
 adb logcat -d -s ZenEcran:I | grep USAGE | tail -3 | sed 's/^/    /' >> "$R"
 
 # ------------------------------------------------------------------ 2. horaire
@@ -110,7 +112,7 @@ sleep 1; shot 03_concentration
 
 # ------------------------------------------------------------------ 4. contenus
 feature_test() { # règle, activité, nom
-    set_config "{\"rules\":{\"$1\":{\"e\":true,\"b\":0}}}"
+    set_config "{\"rules\":{\"$1\":{\"e\":true,\"b\":0}},\"diag\":true}"
     local pkg=${2%%/*}
     start "$pkg/.MainActivity"
     sleep 2
@@ -122,6 +124,8 @@ feature_test() { # règle, activité, nom
     else
         ko "$3 NON détecté"
         shot "echec_$1"
+        echo "    ce que voit le service :" >> "$R"
+        adb logcat -d -s ZenEcran:I | grep " DUMP " | tail -40 | sed 's/.* DUMP /    /' >> "$R"
     fi
 }
 section "Contenus (Reels, Stories)"

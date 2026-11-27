@@ -39,6 +39,10 @@ object UsageRepo {
     fun dayStart(date: LocalDate): Long =
         date.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
 
+    /** Appli au premier plan selon le journal d'Android, mise à jour à chaque calcul du jour en cours. */
+    @Volatile
+    var lastForeground: String? = null
+
     private const val EV_RESUMED = 1
     private const val EV_PAUSED = 2
     private const val EV_SCREEN_OFF = 16
@@ -105,6 +109,7 @@ object UsageRepo {
                 EV_SCREEN_OFF, EV_KEYGUARD_SHOWN, EV_SHUTDOWN -> close(t)
             }
         }
+        if (System.currentTimeMillis() - to < 10_000) lastForeground = cur
         close(to)
         return totals
     }

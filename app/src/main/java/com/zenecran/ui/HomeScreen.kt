@@ -90,6 +90,7 @@ fun HomeScreen(vm: MainViewModel, padding: PaddingValues) {
         }
 
         if (ui.loaded) item { StatusCard(ui, alwaysShow = false) }
+        item { UpdateCard(vm, onlyWhenAvailable = true) }
 
         item {
             ZenCard {

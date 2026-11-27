@@ -11,6 +11,8 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      ZEN_BUILD: ${{ github.run_number }}
     steps:
       - uses: actions/checkout@v4
 
@@ -22,6 +24,18 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: 8.10.2
+
+      - name: Préparer la clé de signature
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+        run: |
+          if [ -z "$KEYSTORE_PASSWORD" ]; then
+            echo "::warning::Secret KEYSTORE_PASSWORD absent : APK signé avec une clé temporaire (les mises à jour ne s'installeront pas par-dessus)."
+            exit 0
+          fi
+          openssl enc -d -aes-256-cbc -pbkdf2 -iter 200000 -in signing/zen.jks.enc -out "$RUNNER_TEMP/zen.jks" -pass env:KEYSTORE_PASSWORD
+          echo "KEYSTORE_FILE=$RUNNER_TEMP/zen.jks" >> "$GITHUB_ENV"
+          echo "KEYSTORE_PASSWORD=$KEYSTORE_PASSWORD" >> "$GITHUB_ENV"
 
       - name: Compiler l'APK
         run: gradle :app:assembleDebug --no-daemon --stacktrace
@@ -46,6 +60,8 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: latest
-          name: "Zen Écran - dernier build"
-          body: "APK compilé automatiquement. Télécharge ZenEcran.apk puis installe-le sur ton téléphone."
+          name: "Zen Écran 1.${{ github.run_number }} (build ${{ github.run_number }})"
+          body: |
+            build=${{ github.run_number }}
+            ${{ github.event.head_commit.message }}
           files: ZenEcran.apk

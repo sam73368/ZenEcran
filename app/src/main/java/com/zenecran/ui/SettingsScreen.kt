@@ -82,6 +82,7 @@ fun SettingsScreen(vm: MainViewModel, padding: PaddingValues) {
     ) {
         item { Text("Réglages", color = Z.textHi, fontSize = 30.sp, fontWeight = FontWeight.Bold) }
         item { StatusCard(ui, alwaysShow = true) }
+        item { UpdateCard(vm, onlyWhenAvailable = false) }
 
         // Objectif
         item {
@@ -291,7 +292,7 @@ fun SettingsScreen(vm: MainViewModel, padding: PaddingValues) {
                 Text("Confidentialité", color = Z.textHi, fontWeight = FontWeight.SemiBold)
                 Spacer(Modifier.height(6.dp))
                 Text(
-                    "Zen Écran n'a aucune permission Internet : rien ne quitte ton téléphone. " +
+                    "Zen Écran n'utilise Internet que pour vérifier et télécharger ses mises à jour sur GitHub : aucune donnée ne quitte ton téléphone. " +
                         "Le service d'accessibilité sert uniquement à savoir quelle appli est ouverte et à repérer les onglets que tu as choisi de bloquer.\n\n" +
                         "Limites honnêtes : si tu désactives le service d'accessibilité ou désinstalles l'appli, plus rien n'est bloqué. " +
                         "Pour un vrai verrou, demande à quelqu'un de confiance de garder le code de déverrouillage de ton téléphone, ou utilise Family Link.",

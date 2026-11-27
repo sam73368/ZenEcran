@@ -2,5 +2,5 @@
 <resources>
     <string name="app_name">Zen Écran</string>
     <string name="service_label">Zen Écran</string>
-    <string name="service_description">"Zen Écran lit l'écran uniquement sur ton téléphone pour savoir quelle application est ouverte et bloquer les Reels, Spotlight ou Shorts que tu as choisis. Rien n'est envoyé nulle part : l'application n'a même pas la permission Internet."</string>
+    <string name="service_description">"Zen Écran lit l'écran uniquement sur ton téléphone pour savoir quelle application est ouverte et bloquer les Reels, Spotlight ou Shorts que tu as choisis. Rien n'est envoyé nulle part : Internet sert uniquement aux mises à jour de l'application."</string>
 </resources>

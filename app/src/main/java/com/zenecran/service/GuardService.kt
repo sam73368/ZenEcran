@@ -60,6 +60,7 @@ class GuardService : AccessibilityService() {
     private var lastAppBlock = 0L
     private var lastFlush = 0L
     private var lastDump = 0L
+    private var lastFgLog = 0L
     private var scanPending = false
 
     private val ticker = object : Runnable {
@@ -175,6 +176,14 @@ class GuardService : AccessibilityService() {
         return p ?: eventPkg
     }
 
+    private fun isVisible(pkg: String): Boolean = appWindows().any {
+        try {
+            it.root?.packageName?.toString() == pkg
+        } catch (e: Exception) {
+            false
+        }
+    }
+
     private fun screenFor(pkg: String, withActivity: Boolean): ScreenCtx {
         val wins = appWindows()
         val roots = ArrayList<AccessibilityNodeInfo>()
@@ -222,23 +231,37 @@ class GuardService : AccessibilityService() {
             lastFlush = nowElapsed
         }
 
-        val pkg = currentApp() ?: return
-        if (pkg in protectedPkgs || pkg == packageName) return
+        val winPkg = currentApp()
+        val usagePkg = UsageRepo.lastForeground
+        if (nowElapsed - lastFgLog > 5000) {
+            lastFgLog = nowElapsed
+            Log.i(TAG, "FG fenetre=$winPkg journal=$usagePkg evenement=$eventPkg")
+        }
         val cfg = Store.config.value
         val now = System.currentTimeMillis()
+        val winOk = winPkg != null && winPkg !in protectedPkgs && winPkg != packageName
 
-        refreshUsageIfNeeded(nowElapsed, pkg, cfg)
+        // Le temps d'écran se rafraîchit même si l'appli devant n'est pas reconnue (sinon les limites ne bougent plus).
+        refreshUsageIfNeeded(nowElapsed, if (winOk) winPkg!! else usagePkg ?: "", cfg)
+
+        // 1) Blocage de l'appli entière : l'appli devant, ou celle que le journal d'Android voit au premier plan
+        //    (si une petite fenêtre d'une autre appli a le focus par-dessus).
+        if (winOk) reasonFor(winPkg!!, cfg, now)?.let { blockApp(winPkg, it); return }
+        if (usagePkg != null && usagePkg != winPkg && usagePkg !in protectedPkgs && usagePkg != packageName &&
+            isVisible(usagePkg)
+        ) {
+            reasonFor(usagePkg, cfg, now)?.let { blockApp(usagePkg, it); return }
+        }
+        if (!winOk) return
+        val pkg = winPkg!!
 
         if (cfg.diagnostic && nowElapsed - lastDump > 2500) {
             lastDump = nowElapsed
-            Store.setDump(pkg, Detector.dump(screenFor(pkg, withActivity = true)))
-        }
-
-        // 1) Blocage de l'appli entière
-        val reason = reasonFor(pkg, cfg, now)
-        if (reason != null) {
-            blockApp(pkg, reason)
-            return
+            val d = Detector.dump(screenFor(pkg, withActivity = true))
+            if (d != Store.dumps.value[pkg]) {
+                Store.setDump(pkg, d)
+                d.lines().take(200).forEach { Log.i(TAG, "DUMP $it") }
+            }
         }
 
         // 2) Blocage d'une fonctionnalité à l'intérieur de l'appli
@@ -250,7 +273,7 @@ class GuardService : AccessibilityService() {
         usageBusy = true
         usageAt = nowElapsed
         val ctx = applicationContext
-        val log = cfg.isMonitored(fg)
+        val log = fg.isNotEmpty() && cfg.isMonitored(fg)
         worker.execute {
             try {
                 usage = UsageRepo.perApp(ctx, UsageRepo.dayStart(LocalDate.now()), System.currentTimeMillis())

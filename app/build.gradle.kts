@@ -12,11 +12,30 @@ android {
         applicationId = "com.zenecran"
         minSdk = 26
         targetSdk = 35
-        versionCode = 1
-        versionName = "1.0"
+        // Numéro de build fourni par GitHub Actions : chaque version publiée est plus récente que la précédente.
+        val build = System.getenv("ZEN_BUILD")?.toIntOrNull() ?: 1
+        versionCode = build
+        versionName = "1.$build"
+    }
+
+    // Clé de signature fixe (déchiffrée par le workflow) : permet d'installer les mises à jour par-dessus.
+    val ksFile = System.getenv("KEYSTORE_FILE")
+    val ksPass = System.getenv("KEYSTORE_PASSWORD")
+    if (ksFile != null && ksPass != null) {
+        signingConfigs {
+            create("zen") {
+                storeFile = file(ksFile)
+                storePassword = ksPass
+                keyAlias = "zen"
+                keyPassword = ksPass
+            }
+        }
     }
 
     buildTypes {
+        debug {
+            if (ksFile != null && ksPass != null) signingConfig = signingConfigs.getByName("zen")
+        }
         release {
             isMinifyEnabled = false
         }
@@ -31,6 +50,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
     packaging {
         resources {
