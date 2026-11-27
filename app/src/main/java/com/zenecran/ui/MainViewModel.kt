@@ -100,9 +100,12 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             var perApp: Map<String, Long> = emptyMap()
             var week: List<Long> = List(7) { 0L }
             if (usage) {
-                perApp = UsageRepo.perApp(ctx, UsageRepo.dayStart(LocalDate.now()), System.currentTimeMillis())
-                    .filterKeys { it in countable }
+                val fromLog = UsageRepo.perApp(ctx, UsageRepo.dayStart(LocalDate.now()), System.currentTimeMillis())
+                val own = Store.daily().appMs
+                perApp = (fromLog.keys + own.keys).filter { it in countable }
+                    .associateWith { maxOf(fromLog[it] ?: 0L, (own[it] ?: 0).toLong()) }
                 week = UsageRepo.weekTotals(ctx, countable)
+                week = week.dropLast(1) + maxOf(week.last(), perApp.values.sum())
             }
             val installed = _ui.value.installed.ifEmpty { UsageRepo.launchableApps(ctx) }
             _ui.value = UiState(usage, acc, battery, perApp, perApp.values.sum(), week, installed, true)

@@ -61,6 +61,8 @@ class GuardService : AccessibilityService() {
     private var lastFlush = 0L
     private var lastDump = 0L
     private var lastFgLog = 0L
+    private var lastCountAt = 0L
+    private var lastBudgetCount = 0L
     private var scanPending = false
 
     private val ticker = object : Runnable {
@@ -223,7 +225,10 @@ class GuardService : AccessibilityService() {
     private fun tick() {
         Store.beat()
         val pm = getSystemService(PowerManager::class.java)
-        if (!pm.isInteractive) return
+        if (!pm.isInteractive) {
+            lastCountAt = 0L
+            return
+        }
         val nowElapsed = SystemClock.elapsedRealtime()
         if (nowElapsed - listsAt > 60_000) refreshLists()
         if (nowElapsed - lastFlush > 10_000) {
@@ -240,6 +245,14 @@ class GuardService : AccessibilityService() {
         val cfg = Store.config.value
         val now = System.currentTimeMillis()
         val winOk = winPkg != null && winPkg !in protectedPkgs && winPkg != packageName
+
+        // Compteur interne du temps au premier plan (le journal d'Android peut avoir des minutes de retard).
+        val delta = if (lastCountAt == 0L) 0L else (nowElapsed - lastCountAt).coerceIn(0L, 2000L)
+        lastCountAt = nowElapsed
+        if (winOk && delta > 0 && overlay?.isShowing != true) {
+            val p = winPkg!!
+            Store.updateDaily(persist = false) { d -> d.copy(appMs = d.appMs + (p to ((d.appMs[p] ?: 0) + delta.toInt()))) }
+        }
 
         // Le temps d'écran se rafraîchit même si l'appli devant n'est pas reconnue (sinon les limites ne bougent plus).
         refreshUsageIfNeeded(nowElapsed, if (winOk) winPkg!! else usagePkg ?: "", cfg)
@@ -277,7 +290,7 @@ class GuardService : AccessibilityService() {
         worker.execute {
             try {
                 usage = UsageRepo.perApp(ctx, UsageRepo.dayStart(LocalDate.now()), System.currentTimeMillis())
-                if (log) Log.i(TAG, "USAGE pkg=$fg ms=${usage[fg] ?: 0L}")
+                if (log) Log.i(TAG, "USAGE pkg=$fg journal=${usage[fg] ?: 0L} interne=${Store.daily().appMs[fg] ?: 0}")
             } catch (t: Throwable) {
                 Log.e(TAG, "usage", t)
             } finally {
@@ -301,7 +314,7 @@ class GuardService : AccessibilityService() {
         if (limit > 0) {
             val extras = Store.daily().extras[pkg] ?: 0
             val allowedMin = limit + extras * cfg.extMinutes
-            val used = usage[pkg] ?: 0L
+            val used = maxOf(usage[pkg] ?: 0L, (Store.daily().appMs[pkg] ?: 0).toLong())
             if (used >= allowedMin * 60_000L) return Reason.Limit(allowedMin, (used / 60_000L).toInt())
             warnIfClose(pkg, cfg, allowedMin, used)
         }
@@ -407,7 +420,8 @@ class GuardService : AccessibilityService() {
                 return
             }
         }
-        if (countBudget) {
+        if (countBudget && nowElapsed - lastBudgetCount >= 950) {
+            lastBudgetCount = nowElapsed
             val ids = hits.map { it.id }.toSet()
             Store.updateDaily(persist = false) { day ->
                 var f = day.featureSec

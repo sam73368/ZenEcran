@@ -85,6 +85,8 @@ data class Daily(
     val featureSec: Map<String, Int> = emptyMap(),
     /** Nombre de « +5 min » accordés aujourd'hui, par appli. */
     val extras: Map<String, Int> = emptyMap(),
+    /** Temps au premier plan compté par le service lui-même (ms), par appli. */
+    val appMs: Map<String, Int> = emptyMap(),
 )
 
 data class InstalledApp(val pkg: String, val label: String)

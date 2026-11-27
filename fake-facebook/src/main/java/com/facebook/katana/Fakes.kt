@@ -81,6 +81,11 @@ private class FakeItem(c: Context) : FrameLayout(c) {
     override fun getAccessibilityClassName(): CharSequence = "android.widget.Button"
 }
 
+/** Surface vidéo annoncée comme telle (le vrai lecteur de Facebook expose android.view.SurfaceView). */
+private class FakeSurface(c: Context) : SurfaceView(c) {
+    override fun getAccessibilityClassName(): CharSequence = "android.view.SurfaceView"
+}
+
 class ReelsViewerActivity : Activity() {
     override fun onCreate(b: Bundle?) {
         super.onCreate(b)
@@ -88,7 +93,7 @@ class ReelsViewerActivity : Activity() {
         list.importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_YES
         val item = FakeItem(this)
         item.contentDescription = "Reel"
-        val video = SurfaceView(this)
+        val video = FakeSurface(this)
         video.importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_YES
         video.contentDescription = "Vidéo"
         item.addView(video, FrameLayout.LayoutParams(-1, -1))

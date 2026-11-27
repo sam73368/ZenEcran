@@ -105,7 +105,9 @@ object Detector {
                 if (!c.isVisibleToUser) continue
                 val big = isBig(c, ctx)
                 val cls = c.className?.toString().orEmpty()
-                if (insideItem && big && (cls.endsWith("SurfaceView") || cls.endsWith("TextureView"))) return true
+                if (insideItem && big && (cls.endsWith("SurfaceView") || cls.endsWith("TextureView") ||
+                        cls.endsWith("VideoView") || cls.contains("PlayerView"))
+                ) return true
                 val item = insideItem || (big && c.isLongClickable)
                 if (search(c, depth + 1, item)) return true
             }

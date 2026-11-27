@@ -201,7 +201,9 @@ object Store {
         d.featureSec.forEach { (k, v) -> f.put(k, v) }
         val e = JSONObject()
         d.extras.forEach { (k, v) -> e.put(k, v) }
-        o.put("f", f).put("e", e)
+        val a = JSONObject()
+        d.appMs.forEach { (k, v) -> a.put(k, v) }
+        o.put("f", f).put("e", e).put("a", a)
         return o.toString()
     }
 
@@ -213,7 +215,9 @@ object Store {
             o.optJSONObject("f")?.let { j -> j.keys().forEach { k -> f[k] = j.optInt(k) } }
             val e = mutableMapOf<String, Int>()
             o.optJSONObject("e")?.let { j -> j.keys().forEach { k -> e[k] = j.optInt(k) } }
-            Daily(o.optString("day", today()), f, e)
+            val a = mutableMapOf<String, Int>()
+            o.optJSONObject("a")?.let { j -> j.keys().forEach { k -> a[k] = j.optInt(k) } }
+            Daily(o.optString("day", today()), f, e, a)
         } catch (ex: Exception) {
             Daily(day = today())
         }
