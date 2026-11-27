@@ -1,0 +1,229 @@
+--------- beginning of main
+11-27 20:35:41.276  6315  6315 I ZenEcran: SERVICE_CONNECTED
+11-27 20:35:41.285  6315  6315 I ZenEcran: FG fenetre=com.google.android.apps.nexuslauncher journal=null evenement=null
+11-27 20:35:45.311  6315  6344 I ZenEcran: USAGE pkg=com.instagram.android journal=5065 interne=1009
+11-27 20:35:46.310  6315  6315 I ZenEcran: FG fenetre=com.instagram.android journal=com.instagram.android evenement=com.instagram.android
+11-27 20:35:49.321  6315  6344 I ZenEcran: USAGE pkg=com.instagram.android journal=9077 interne=5025
+11-27 20:35:51.325  6315  6315 I ZenEcran: FG fenetre=com.instagram.android journal=com.instagram.android evenement=com.instagram.android
+11-27 20:35:53.334  6315  6344 I ZenEcran: USAGE pkg=com.instagram.android journal=13090 interne=9038
+11-27 20:35:56.341  6315  6315 I ZenEcran: FG fenetre=com.instagram.android journal=com.instagram.android evenement=com.instagram.android
+11-27 20:35:57.346  6315  6344 I ZenEcran: USAGE pkg=com.instagram.android journal=17102 interne=13050
+11-27 20:36:01.355  6315  6315 I ZenEcran: FG fenetre=com.instagram.android journal=com.instagram.android evenement=com.instagram.android
+11-27 20:36:01.357  6315  6344 I ZenEcran: USAGE pkg=com.instagram.android journal=21113 interne=17061
+11-27 20:36:05.369  6315  6344 I ZenEcran: USAGE pkg=com.instagram.android journal=25125 interne=21073
+11-27 20:36:06.370  6315  6315 I ZenEcran: FG fenetre=com.instagram.android journal=com.instagram.android evenement=com.instagram.android
+11-27 20:36:09.381  6315  6344 I ZenEcran: USAGE pkg=com.instagram.android journal=29137 interne=25086
+11-27 20:36:11.385  6315  6315 I ZenEcran: FG fenetre=com.instagram.android journal=com.instagram.android evenement=com.instagram.android
+11-27 20:36:13.394  6315  6344 I ZenEcran: USAGE pkg=com.instagram.android journal=33150 interne=29098
+11-27 20:36:16.400  6315  6315 I ZenEcran: FG fenetre=com.instagram.android journal=com.instagram.android evenement=com.instagram.android
+11-27 20:36:17.406  6315  6344 I ZenEcran: USAGE pkg=com.instagram.android journal=37162 interne=33110
+11-27 20:36:21.416  6315  6315 I ZenEcran: FG fenetre=com.instagram.android journal=com.instagram.android evenement=com.instagram.android
+11-27 20:36:21.418  6315  6344 I ZenEcran: USAGE pkg=com.instagram.android journal=41174 interne=37122
+11-27 20:36:25.429  6315  6344 I ZenEcran: USAGE pkg=com.instagram.android journal=45185 interne=41133
+11-27 20:36:26.430  6315  6315 I ZenEcran: FG fenetre=com.instagram.android journal=com.instagram.android evenement=com.instagram.android
+11-27 20:36:29.441  6315  6344 I ZenEcran: USAGE pkg=com.instagram.android journal=49197 interne=45145
+11-27 20:36:31.445  6315  6315 I ZenEcran: FG fenetre=com.instagram.android journal=com.instagram.android evenement=com.instagram.android
+11-27 20:36:33.454  6315  6344 I ZenEcran: USAGE pkg=com.instagram.android journal=53210 interne=49158
+11-27 20:36:36.459  6315  6315 I ZenEcran: FG fenetre=com.instagram.android journal=com.instagram.android evenement=com.instagram.android
+11-27 20:36:37.464  6315  6344 I ZenEcran: USAGE pkg=com.instagram.android journal=57221 interne=53169
+11-27 20:36:41.476  6315  6315 I ZenEcran: FG fenetre=com.instagram.android journal=com.instagram.android evenement=com.instagram.android
+11-27 20:36:41.478  6315  6344 I ZenEcran: USAGE pkg=com.instagram.android journal=61234 interne=57180
+11-27 20:36:42.480  6315  6315 I ZenEcran: BLOCK_APP pkg=com.instagram.android reason=limit
+--------- beginning of main
+11-27 20:36:44.959  6315  6315 I ZenEcran: SERVICE_UNBIND
+11-27 20:36:46.256  6676  6676 I ZenEcran: SERVICE_CONNECTED
+11-27 20:36:46.259  6676  6676 I ZenEcran: FG fenetre=com.google.android.apps.nexuslauncher journal=null evenement=null
+11-27 20:36:49.985  6676  6676 I ZenEcran: BLOCK_APP pkg=com.instagram.android reason=schedule
+11-27 20:36:51.800  6676  6676 I ZenEcran: FG fenetre=com.google.android.apps.nexuslauncher journal=com.google.android.apps.nexuslauncher evenement=com.google.android.apps.nexuslauncher
+--------- beginning of main
+11-27 20:36:52.865  6676  6676 I ZenEcran: SERVICE_UNBIND
+11-27 20:36:54.186  6841  6841 I ZenEcran: SERVICE_CONNECTED
+11-27 20:36:54.188  6841  6841 I ZenEcran: FG fenetre=com.google.android.apps.nexuslauncher journal=null evenement=null
+11-27 20:36:58.206  6841  6866 I ZenEcran: USAGE pkg=com.instagram.android journal=63864 interne=1002
+11-27 20:36:59.206  6841  6841 I ZenEcran: FG fenetre=com.instagram.android journal=com.instagram.android evenement=com.instagram.android
+11-27 20:37:02.217  6841  6866 I ZenEcran: USAGE pkg=com.instagram.android journal=67875 interne=5014
+--------- beginning of main
+11-27 20:37:02.551  6841  6841 I ZenEcran: SERVICE_UNBIND
+11-27 20:37:03.923  6967  6967 I ZenEcran: SERVICE_CONNECTED
+11-27 20:37:03.926  6967  6967 I ZenEcran: FG fenetre=com.google.android.apps.nexuslauncher journal=null evenement=null
+11-27 20:37:07.647  6967  6967 I ZenEcran: BLOCK_APP pkg=com.facebook.katana reason=focus
+11-27 20:37:09.415  6967  6967 I ZenEcran: FG fenetre=com.google.android.apps.nexuslauncher journal=com.google.android.apps.nexuslauncher evenement=com.google.android.apps.nexuslauncher
+--------- beginning of main
+11-27 20:37:09.481  6967  6967 I ZenEcran: SERVICE_UNBIND
+11-27 20:37:10.789  7111  7111 I ZenEcran: SERVICE_CONNECTED
+11-27 20:37:10.791  7111  7111 I ZenEcran: FG fenetre=com.google.android.apps.nexuslauncher journal=null evenement=null
+11-27 20:37:14.510  7111  7111 I ZenEcran: DUMP appli=com.instagram.android
+11-27 20:37:14.510  7111  7111 I ZenEcran: DUMP activité=com.instagram.android.MainActivity
+11-27 20:37:14.510  7111  7111 I ZenEcran: DUMP fenêtres=Faux Instagram
+11-27 20:37:14.510  7111  7111 I ZenEcran: DUMP FrameLayout [100x100%] 
+11-27 20:37:14.510  7111  7111 I ZenEcran: DUMP   LinearLayout [100x100%] 
+11-27 20:37:14.510  7111  7111 I ZenEcran: DUMP     FrameLayout id=content [100x96%] 
+11-27 20:37:14.510  7111  7111 I ZenEcran: DUMP       FrameLayout desc="Faux Instagram : accueil" [100x96%] 
+11-27 20:37:14.510  7111  7111 I ZenEcran: DUMP         TextView text="Faux Instagram : accueil" [100x96%] 
+11-27 20:37:14.510  7111  7111 I ZenEcran: DUMP   View id=statusBarBackground [caché]
+11-27 20:37:14.510  7111  7111 I ZenEcran: DUMP 
+11-27 20:37:15.805  7111  7111 I ZenEcran: FG fenetre=com.instagram.android journal=com.instagram.android evenement=com.instagram.android
+11-27 20:37:16.637  7111  7111 I ZenEcran: BLOCK_FEATURE id=ig_reels action=redirect
+--------- beginning of main
+11-27 20:37:19.368  7111  7111 I ZenEcran: SERVICE_UNBIND
+11-27 20:37:20.739  7269  7269 I ZenEcran: SERVICE_CONNECTED
+11-27 20:37:20.742  7269  7269 I ZenEcran: FG fenetre=com.google.android.apps.nexuslauncher journal=null evenement=null
+11-27 20:37:24.478  7269  7269 I ZenEcran: DUMP appli=com.instagram.android
+11-27 20:37:24.478  7269  7269 I ZenEcran: DUMP activité=com.instagram.android.MainActivity
+11-27 20:37:24.478  7269  7269 I ZenEcran: DUMP fenêtres=Faux Instagram
+11-27 20:37:24.478  7269  7269 I ZenEcran: DUMP FrameLayout [100x100%] 
+11-27 20:37:24.478  7269  7269 I ZenEcran: DUMP   LinearLayout [100x100%] 
+11-27 20:37:24.478  7269  7269 I ZenEcran: DUMP     FrameLayout id=content [100x96%] 
+11-27 20:37:24.478  7269  7269 I ZenEcran: DUMP       FrameLayout desc="Faux Instagram : accueil" [100x96%] 
+11-27 20:37:24.478  7269  7269 I ZenEcran: DUMP         TextView text="Faux Instagram : accueil" [100x96%] 
+11-27 20:37:24.478  7269  7269 I ZenEcran: DUMP   View id=statusBarBackground [caché]
+11-27 20:37:24.479  7269  7269 I ZenEcran: DUMP 
+11-27 20:37:25.760  7269  7269 I ZenEcran: FG fenetre=com.instagram.android journal=com.instagram.android evenement=com.instagram.android
+11-27 20:37:26.574  7269  7269 I ZenEcran: BLOCK_FEATURE id=ig_stories action=back
+--------- beginning of main
+11-27 20:37:29.265  7269  7269 I ZenEcran: SERVICE_UNBIND
+11-27 20:37:30.640  7417  7417 I ZenEcran: SERVICE_CONNECTED
+11-27 20:37:30.647  7417  7417 I ZenEcran: FG fenetre=com.google.android.apps.nexuslauncher journal=null evenement=null
+11-27 20:37:34.366  7417  7417 I ZenEcran: DUMP appli=com.facebook.katana
+11-27 20:37:34.366  7417  7417 I ZenEcran: DUMP activité=com.facebook.katana.MainActivity
+11-27 20:37:34.366  7417  7417 I ZenEcran: DUMP fenêtres=Faux Facebook
+11-27 20:37:34.366  7417  7417 I ZenEcran: DUMP FrameLayout [100x100%] 
+11-27 20:37:34.366  7417  7417 I ZenEcran: DUMP   LinearLayout [100x100%] 
+11-27 20:37:34.366  7417  7417 I ZenEcran: DUMP     FrameLayout id=content [100x96%] 
+11-27 20:37:34.367  7417  7417 I ZenEcran: DUMP       LinearLayout [100x96%] 
+11-27 20:37:34.367  7417  7417 I ZenEcran: DUMP           TextView desc="Accueil, onglet 1 sur 4" text="Accueil" [SÉLECTIONNÉ] 
+11-27 20:37:34.367  7417  7417 I ZenEcran: DUMP           TextView desc="Reels, onglet 2 sur 4" text="Reels" 
+11-27 20:37:34.367  7417  7417 I ZenEcran: DUMP           TextView desc="Vidéo, onglet 3 sur 4" text="Vidéo" 
+11-27 20:37:34.367  7417  7417 I ZenEcran: DUMP           TextView desc="Profil, onglet 4 sur 4" text="Profil" [caché]
+11-27 20:37:34.367  7417  7417 I ZenEcran: DUMP         TextView text="Faux Facebook : fil d'actualité" 
+11-27 20:37:34.367  7417  7417 I ZenEcran: DUMP   View id=statusBarBackground [caché]
+11-27 20:37:34.367  7417  7417 I ZenEcran: DUMP 
+11-27 20:37:35.664  7417  7417 I ZenEcran: FG fenetre=com.facebook.katana journal=com.facebook.katana evenement=com.facebook.katana
+11-27 20:37:36.489  7417  7417 I ZenEcran: BLOCK_FEATURE id=fb_stories action=back
+--------- beginning of main
+11-27 20:37:39.191  7417  7417 I ZenEcran: SERVICE_UNBIND
+11-27 20:37:40.566  7561  7561 I ZenEcran: SERVICE_CONNECTED
+11-27 20:37:40.568  7561  7561 I ZenEcran: FG fenetre=com.google.android.apps.nexuslauncher journal=null evenement=null
+11-27 20:37:44.096  7561  7561 I ZenEcran: DUMP appli=com.facebook.katana
+11-27 20:37:44.096  7561  7561 I ZenEcran: DUMP activité=com.facebook.katana.MainActivity
+11-27 20:37:44.096  7561  7561 I ZenEcran: DUMP fenêtres=Faux Facebook
+11-27 20:37:44.096  7561  7561 I ZenEcran: DUMP FrameLayout [100x100%] 
+11-27 20:37:44.096  7561  7561 I ZenEcran: DUMP   LinearLayout [100x100%] 
+11-27 20:37:44.096  7561  7561 I ZenEcran: DUMP     FrameLayout id=content [100x96%] 
+11-27 20:37:44.096  7561  7561 I ZenEcran: DUMP       LinearLayout [100x96%] 
+11-27 20:37:44.096  7561  7561 I ZenEcran: DUMP           TextView desc="Accueil, onglet 1 sur 4" text="Accueil" [SÉLECTIONNÉ] 
+11-27 20:37:44.096  7561  7561 I ZenEcran: DUMP           TextView desc="Reels, onglet 2 sur 4" text="Reels" 
+11-27 20:37:44.096  7561  7561 I ZenEcran: DUMP           TextView desc="Vidéo, onglet 3 sur 4" text="Vidéo" 
+11-27 20:37:44.096  7561  7561 I ZenEcran: DUMP           TextView desc="Profil, onglet 4 sur 4" text="Profil" [caché]
+11-27 20:37:44.096  7561  7561 I ZenEcran: DUMP         TextView text="Faux Facebook : fil d'actualité" 
+11-27 20:37:44.096  7561  7561 I ZenEcran: DUMP   View id=statusBarBackground [caché]
+11-27 20:37:44.096  7561  7561 I ZenEcran: DUMP 
+11-27 20:37:45.585  7561  7561 I ZenEcran: FG fenetre=com.facebook.katana journal=com.facebook.katana evenement=com.facebook.katana
+11-27 20:37:46.385  7561  7561 I ZenEcran: BLOCK_FEATURE id=fb_reels action=redirect
+11-27 20:37:46.595  7561  7561 I ZenEcran: DUMP appli=com.facebook.katana
+11-27 20:37:46.595  7561  7561 I ZenEcran: DUMP activité=com.facebook.katana.MainActivity
+11-27 20:37:46.595  7561  7561 I ZenEcran: DUMP FrameLayout [100x100%] 
+11-27 20:37:46.595  7561  7561 I ZenEcran: DUMP   LinearLayout [100x100%] 
+11-27 20:37:46.595  7561  7561 I ZenEcran: DUMP     FrameLayout id=content [100x96%] 
+11-27 20:37:46.595  7561  7561 I ZenEcran: DUMP       LinearLayout [100x96%] 
+11-27 20:37:46.595  7561  7561 I ZenEcran: DUMP           TextView desc="Accueil, onglet 1 sur 4" text="Accueil" [SÉLECTIONNÉ] 
+11-27 20:37:46.595  7561  7561 I ZenEcran: DUMP           TextView desc="Reels, onglet 2 sur 4" text="Reels" 
+11-27 20:37:46.595  7561  7561 I ZenEcran: DUMP           TextView desc="Vidéo, onglet 3 sur 4" text="Vidéo" 
+11-27 20:37:46.595  7561  7561 I ZenEcran: DUMP           TextView desc="Profil, onglet 4 sur 4" text="Profil" [caché]
+11-27 20:37:46.595  7561  7561 I ZenEcran: DUMP         TextView text="Faux Facebook : fil d'actualité" 
+11-27 20:37:46.595  7561  7561 I ZenEcran: DUMP   View id=statusBarBackground [caché]
+11-27 20:37:46.595  7561  7561 I ZenEcran: DUMP 
+--------- beginning of main
+11-27 20:37:49.072  7561  7561 I ZenEcran: SERVICE_UNBIND
+11-27 20:37:50.431  7710  7710 I ZenEcran: SERVICE_CONNECTED
+11-27 20:37:50.434  7710  7710 I ZenEcran: FG fenetre=com.google.android.apps.nexuslauncher journal=null evenement=null
+11-27 20:37:54.144  7710  7710 I ZenEcran: DUMP appli=com.facebook.katana
+11-27 20:37:54.144  7710  7710 I ZenEcran: DUMP activité=com.facebook.katana.MainActivity
+11-27 20:37:54.144  7710  7710 I ZenEcran: DUMP fenêtres=Faux Facebook
+11-27 20:37:54.144  7710  7710 I ZenEcran: DUMP FrameLayout [100x100%] 
+11-27 20:37:54.144  7710  7710 I ZenEcran: DUMP   LinearLayout [100x100%] 
+11-27 20:37:54.144  7710  7710 I ZenEcran: DUMP     FrameLayout id=content [100x96%] 
+11-27 20:37:54.144  7710  7710 I ZenEcran: DUMP       LinearLayout [100x96%] 
+11-27 20:37:54.144  7710  7710 I ZenEcran: DUMP           TextView desc="Accueil, onglet 1 sur 4" text="Accueil" [SÉLECTIONNÉ] 
+11-27 20:37:54.144  7710  7710 I ZenEcran: DUMP           TextView desc="Reels, onglet 2 sur 4" text="Reels" 
+11-27 20:37:54.144  7710  7710 I ZenEcran: DUMP           TextView desc="Vidéo, onglet 3 sur 4" text="Vidéo" 
+11-27 20:37:54.144  7710  7710 I ZenEcran: DUMP           TextView desc="Profil, onglet 4 sur 4" text="Profil" [caché]
+11-27 20:37:54.144  7710  7710 I ZenEcran: DUMP         TextView text="Faux Facebook : fil d'actualité" 
+11-27 20:37:54.144  7710  7710 I ZenEcran: DUMP   View id=statusBarBackground [caché]
+11-27 20:37:54.144  7710  7710 I ZenEcran: DUMP 
+11-27 20:37:55.450  7710  7710 I ZenEcran: FG fenetre=com.facebook.katana journal=com.facebook.katana evenement=com.facebook.katana
+11-27 20:37:56.238  7710  7710 I ZenEcran: BLOCK_FEATURE id=fb_reels action=back
+--------- beginning of main
+11-27 20:38:13.099  7860  7860 I ZenEcran: SERVICE_UNBIND
+11-27 20:38:14.122  7860  7860 I ZenEcran: SERVICE_CONNECTED
+11-27 20:38:14.124  7860  7860 I ZenEcran: FG fenetre=com.snapchat.android journal=com.snapchat.android evenement=null
+11-27 20:38:15.162  7860  7860 I ZenEcran: BLOCK_FEATURE id=sc_spotlight action=redirect
+11-27 20:38:17.176  7860  7860 I ZenEcran: DUMP appli=com.snapchat.android
+11-27 20:38:17.176  7860  7860 I ZenEcran: DUMP activité=com.snapchat.android.MainActivity
+11-27 20:38:17.176  7860  7860 I ZenEcran: DUMP fenêtres=Faux Snapchat
+11-27 20:38:17.176  7860  7860 I ZenEcran: DUMP FrameLayout [100x100%] 
+11-27 20:38:17.176  7860  7860 I ZenEcran: DUMP   LinearLayout [100x100%] 
+11-27 20:38:17.176  7860  7860 I ZenEcran: DUMP     FrameLayout id=content [100x96%] 
+11-27 20:38:17.176  7860  7860 I ZenEcran: DUMP       LinearLayout [100x96%] 
+11-27 20:38:17.176  7860  7860 I ZenEcran: DUMP         TextView text="Chat" 
+11-27 20:38:17.176  7860  7860 I ZenEcran: DUMP         TextView text="Mayaaa — Remis 2 h Olivier — Nouveau Snap" [100x62%] 
+11-27 20:38:17.176  7860  7860 I ZenEcran: DUMP           FrameLayout id=ngs_map_icon_container desc="Carte" [appui-long] 
+11-27 20:38:17.176  7860  7860 I ZenEcran: DUMP             TextView text="Cart" 
+11-27 20:38:17.176  7860  7860 I ZenEcran: DUMP           FrameLayout id=ngs_chat_icon_container desc="Chat" [appui-long] 
+11-27 20:38:17.176  7860  7860 I ZenEcran: DUMP             TextView text="Chat" 
+11-27 20:38:17.176  7860  7860 I ZenEcran: DUMP           FrameLayout id=ngs_camera_icon_container desc="Appareil" [appui-long] 
+11-27 20:38:17.176  7860  7860 I ZenEcran: DUMP             TextView text="Appa" 
+11-27 20:38:17.176  7860  7860 I ZenEcran: DUMP           FrameLayout id=ngs_community_icon_container desc="Stories" [appui-long] 
+11-27 20:38:17.176  7860  7860 I ZenEcran: DUMP             TextView text="Stor" 
+11-27 20:38:17.176  7860  7860 I ZenEcran: DUMP           FrameLayout id=ngs_spotlight_icon_container desc="Spotlight" [appui-long] 
+11-27 20:38:17.176  7860  7860 I ZenEcran: DUMP             TextView text="Spot" [SÉLECTIONNÉ] 
+11-27 20:38:17.176  7860  7860 I ZenEcran: DUMP   View id=statusBarBackground [caché]
+11-27 20:38:17.176  7860  7860 I ZenEcran: DUMP 
+--------- beginning of main
+11-27 20:38:18.079  7860  7860 I ZenEcran: SERVICE_UNBIND
+11-27 20:38:19.472  8076  8076 I ZenEcran: SERVICE_CONNECTED
+11-27 20:38:19.475  8076  8076 I ZenEcran: FG fenetre=com.google.android.apps.nexuslauncher journal=null evenement=null
+11-27 20:38:24.495  8076  8076 I ZenEcran: FG fenetre=com.facebook.katana journal=com.facebook.katana evenement=com.facebook.katana
+11-27 20:38:29.525  8076  8076 I ZenEcran: FG fenetre=com.instagram.android journal=com.facebook.katana evenement=com.facebook.katana
+11-27 20:38:34.554  8076  8076 I ZenEcran: FG fenetre=com.instagram.android journal=com.instagram.android evenement=com.instagram.android
+--------- beginning of main
+11-27 20:38:35.265  8076  8076 I ZenEcran: SERVICE_UNBIND
+11-27 20:38:36.706  8231  8231 I ZenEcran: SERVICE_CONNECTED
+11-27 20:38:36.709  8231  8231 I ZenEcran: FG fenetre=com.google.android.apps.nexuslauncher journal=null evenement=null
+11-27 20:38:41.723  8231  8231 I ZenEcran: FG fenetre=com.instagram.android journal=com.instagram.android evenement=com.instagram.android
+11-27 20:38:46.748  8231  8231 I ZenEcran: FG fenetre=com.instagram.android journal=com.instagram.android evenement=com.instagram.android
+11-27 20:38:51.772  8231  8231 I ZenEcran: FG fenetre=com.instagram.android journal=com.instagram.android evenement=com.instagram.android
+11-27 20:38:56.794  8231  8231 I ZenEcran: FG fenetre=com.instagram.android journal=com.instagram.android evenement=com.instagram.android
+11-27 20:39:01.816  8231  8231 I ZenEcran: FG fenetre=com.instagram.android journal=com.instagram.android evenement=com.instagram.android
+11-27 20:39:06.840  8231  8231 I ZenEcran: FG fenetre=com.instagram.android journal=com.instagram.android evenement=com.instagram.android
+11-27 20:39:11.863  8231  8231 I ZenEcran: FG fenetre=com.instagram.android journal=com.instagram.android evenement=com.instagram.android
+11-27 20:39:16.887  8231  8231 I ZenEcran: FG fenetre=com.instagram.android journal=com.instagram.android evenement=com.instagram.android
+11-27 20:39:21.909  8231  8231 I ZenEcran: FG fenetre=com.instagram.android journal=com.instagram.android evenement=com.instagram.android
+11-27 20:39:26.932  8231  8231 I ZenEcran: FG fenetre=com.instagram.android journal=com.instagram.android evenement=com.instagram.android
+11-27 20:39:31.956  8231  8231 I ZenEcran: FG fenetre=com.instagram.android journal=com.instagram.android evenement=com.instagram.android
+11-27 20:39:36.981  8231  8231 I ZenEcran: FG fenetre=com.instagram.android journal=com.instagram.android evenement=com.instagram.android
+11-27 20:39:42.005  8231  8231 I ZenEcran: FG fenetre=com.instagram.android journal=com.instagram.android evenement=com.instagram.android
+11-27 20:39:42.020  8231  8231 I ZenEcran: BLOCK_FEATURE id=ig_reels action=redirect
+--------- beginning of main
+11-27 20:39:42.150  8231  8231 I ZenEcran: SERVICE_UNBIND
+11-27 20:39:43.528  8571  8571 I ZenEcran: SERVICE_CONNECTED
+11-27 20:39:43.532  8571  8571 I ZenEcran: FG fenetre=com.google.android.apps.nexuslauncher journal=null evenement=null
+11-27 20:39:48.600  8571  8571 I ZenEcran: FG fenetre=com.zenecran journal=com.zenecran evenement=null
+11-27 20:39:51.464  8571  8571 I ZenEcran: SERVICE_UNBIND
+11-27 20:39:52.514  8571  8571 I ZenEcran: SERVICE_CONNECTED
+11-27 20:39:52.515  8571  8571 I ZenEcran: FG fenetre=com.zenecran journal=com.zenecran evenement=null
+11-27 20:39:55.622  8571  8571 I ZenEcran: SERVICE_UNBIND
+11-27 20:39:56.682  8571  8571 I ZenEcran: SERVICE_CONNECTED
+11-27 20:39:56.683  8571  8571 I ZenEcran: FG fenetre=com.zenecran journal=com.zenecran evenement=null
+11-27 20:39:59.784  8571  8571 I ZenEcran: SERVICE_UNBIND
+11-27 20:40:00.829  8571  8571 I ZenEcran: SERVICE_CONNECTED
+11-27 20:40:00.830  8571  8571 I ZenEcran: FG fenetre=com.zenecran journal=null evenement=null
+11-27 20:40:03.934  8571  8571 I ZenEcran: SERVICE_UNBIND
+11-27 20:40:04.985  8571  8571 I ZenEcran: SERVICE_CONNECTED
+11-27 20:40:04.986  8571  8571 I ZenEcran: FG fenetre=com.zenecran journal=null evenement=null
+11-27 20:40:08.091  8571  8571 I ZenEcran: SERVICE_UNBIND
+11-27 20:40:09.144  8571  8571 I ZenEcran: SERVICE_CONNECTED
+11-27 20:40:09.146  8571  8571 I ZenEcran: FG fenetre=com.zenecran journal=null evenement=null
+11-27 20:40:11.150  8571  8571 I ZenEcran: SERVICE_UNBIND
+11-27 20:40:12.197  8571  8571 I ZenEcran: SERVICE_CONNECTED
+11-27 20:40:12.199  8571  8571 I ZenEcran: FG fenetre=com.zenecran journal=null evenement=null
