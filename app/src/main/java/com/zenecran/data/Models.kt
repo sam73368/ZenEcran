@@ -28,16 +28,44 @@ data class Schedule(
     }
 }
 
+/** Règle de blocage créée par l'utilisateur pour n'importe quelle appli. */
+data class CustomRule(
+    val id: String,
+    val pkg: String,
+    val title: String,
+    val selectedLabels: List<String> = emptyList(),
+    val ids: List<String> = emptyList(),
+)
+
 data class Config(
     /** App surveillée -> limite quotidienne en minutes (0 = aucune limite, juste surveillée). */
     val limits: Map<String, Int> = emptyMap(),
     val rules: Map<String, RuleConfig> = emptyMap(),
+    val customRules: List<CustomRule> = emptyList(),
     val schedules: List<Schedule> = emptyList(),
     val goalMin: Int = 180,
     val focusUntil: Long = 0L,
     val strictUntil: Long = 0L,
     val diagnostic: Boolean = false,
+    // Personnalisation
+    val accent: Int = 0,
+    val amoled: Boolean = false,
+    val quote: String = "",
+    val extMinutes: Int = 5,
+    val extMax: Int = 2,
+    val extWaitSec: Int = 15,
+    val warnMin: Int = 5,
+    /** true : « retour » d'abord ; false : retour direct à l'accueil quand un contenu est bloqué. */
+    val featureBack: Boolean = true,
 ) {
+    /** Fonctionnalités prédéfinies + règles personnalisées. */
+    fun allFeatures(): List<FeatureDef> = Presets.features + customRules.map {
+        FeatureDef(
+            id = it.id, pkg = it.pkg, title = it.title, subtitle = "Règle personnalisée",
+            ids = it.ids, selectedLabels = it.selectedLabels,
+        )
+    }
+
     fun isStrict(now: Long = System.currentTimeMillis()) = strictUntil > now
     fun isFocus(now: Long = System.currentTimeMillis()) = focusUntil > now
 

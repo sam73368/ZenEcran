@@ -17,6 +17,7 @@ import com.zenecran.data.Store
 import com.zenecran.data.UsageRepo
 import com.zenecran.data.fmtClock
 import com.zenecran.data.fmtMin
+import com.zenecran.ui.Z
 import java.time.LocalDate
 import java.util.Calendar
 import java.util.concurrent.ExecutorService
@@ -49,6 +50,7 @@ class GuardService : AccessibilityService() {
     @Volatile private var usageBusy = false
     private var usageAt = 0L
 
+    private val warned = HashSet<String>()
     private var lastEnforce = 0L
     private var lastFlush = 0L
     private var lastDump = 0L
@@ -67,6 +69,7 @@ class GuardService : AccessibilityService() {
     override fun onServiceConnected() {
         super.onServiceConnected()
         Store.init(this)
+        Z.apply(Store.config.value)
         overlay = BlockOverlay(this)
         refreshIgnored()
         main.removeCallbacks(ticker)
@@ -177,11 +180,24 @@ class GuardService : AccessibilityService() {
         val limit = cfg.limits[pkg] ?: 0
         if (limit > 0) {
             val extras = Store.daily().extras[pkg] ?: 0
-            val allowedMin = limit + extras * 5
+            val allowedMin = limit + extras * cfg.extMinutes
             val used = usage[pkg] ?: 0L
             if (used >= allowedMin * 60_000L) return Reason.Limit(allowedMin, (used / 60_000L).toInt())
+            warnIfClose(pkg, cfg, allowedMin, used)
         }
         return null
+    }
+
+    /** Petit message quand il ne reste que quelques minutes (une seule fois par palier). */
+    private fun warnIfClose(pkg: String, cfg: Config, allowedMin: Int, used: Long) {
+        if (cfg.warnMin <= 0) return
+        val remaining = allowedMin * 60_000L - used
+        if (remaining <= 0 || remaining > cfg.warnMin * 60_000L) return
+        val key = "${Store.today()}|$pkg|$allowedMin"
+        if (warned.add(key)) {
+            val left = ((remaining + 59_999L) / 60_000L).toInt()
+            Toast.makeText(this, "Plus que ${fmtMin(left)} sur ${labelOf(pkg)}", Toast.LENGTH_LONG).show()
+        }
     }
 
     // ---------------------------------------------------------------- blocage appli
@@ -215,7 +231,7 @@ class GuardService : AccessibilityService() {
                 detail = "$label est bloqué encore ${fmtMin(maxOf(left, 1))}."
             }
         }
-        val canExtend = reason is Reason.Limit && !cfg.isStrict() && extras < 2
+        val canExtend = reason is Reason.Limit && !cfg.isStrict() && extras < cfg.extMax
 
         performGlobalAction(GLOBAL_ACTION_HOME)
         fgPkg = null
@@ -227,6 +243,9 @@ class GuardService : AccessibilityService() {
                 detail = detail,
                 usedLine = used,
                 canExtend = canExtend,
+                extMinutes = cfg.extMinutes,
+                waitSec = cfg.extWaitSec,
+                quote = cfg.quote,
                 onExtend = {
                     Store.updateDaily { d -> d.copy(extras = d.extras + (pkg to ((d.extras[pkg] ?: 0) + 1))) }
                 },
@@ -237,7 +256,7 @@ class GuardService : AccessibilityService() {
     // ---------------------------------------------------------------- blocage fonctionnalité
 
     private fun scanFeatures(pkg: String, cfg: Config) {
-        val defs = Presets.features.filter { it.pkg == pkg && cfg.rules[it.id]?.enabled == true }
+        val defs = cfg.allFeatures().filter { it.pkg == pkg && cfg.rules[it.id]?.enabled == true }
         if (defs.isEmpty()) return
         val root = rootInActiveWindow ?: return
         if (root.packageName?.toString() != pkg) return
@@ -260,8 +279,9 @@ class GuardService : AccessibilityService() {
         // Si le « retour » n'a pas suffi, on renvoie à l'accueil.
         val repeated = now - lastEnforce < 4000
         lastEnforce = now
-        performGlobalAction(if (repeated) GLOBAL_ACTION_HOME else GLOBAL_ACTION_BACK)
-        val appName = Presets.appLabel(d.pkg) ?: d.pkg
+        val goHome = repeated || !Store.config.value.featureBack
+        performGlobalAction(if (goHome) GLOBAL_ACTION_HOME else GLOBAL_ACTION_BACK)
+        val appName = labelOf(d.pkg)
         val msg = if (hard) "${d.title} est bloqué sur $appName" else "Budget ${d.title} épuisé pour aujourd'hui"
         Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
     }

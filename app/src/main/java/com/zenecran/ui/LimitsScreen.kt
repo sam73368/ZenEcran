@@ -65,7 +65,7 @@ fun LimitsScreen(vm: MainViewModel, padding: PaddingValues) {
 
     val monitored = cfg.limits.keys
         .sortedByDescending { ui.perApp[it] ?: 0L }
-    val suggestions = Presets.apps.filter { it.pkg in installedPkgs && it.pkg !in cfg.limits }
+    val suggestions = Presets.apps.filter { it.pkg in installedPkgs && it.pkg !in cfg.limits }.take(9)
 
     LazyColumn(
         Modifier

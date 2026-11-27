@@ -4,7 +4,8 @@ Application Android pour reprendre le contrôle de ton temps d'écran :
 
 - **Limites quotidiennes** par appli : une fois la limite atteinte, l'appli est fermée.
 - **Horaires** : plages comme « 22:00 → 07:00, tous les jours » avec une liste d'applis cochées interdites.
-- **Contenu** : bloque seulement Reels / Spotlight / Shorts, ou donne un budget (ex. 10 min par jour).
+- **Contenu** : bloque seulement Reels / Stories / Spotlight / Shorts / Statuts WhatsApp, ou donne un budget (ex. 10 min par jour). Tu peux créer tes propres règles pour n'importe quelle appli.
+- **Personnalisation** : couleur d'accent, noir AMOLED, ton propre message sur l'écran de blocage, délai et durée du « + minutes », avertissement avant la limite.
 - **Mode concentration** : tout bloquer 30 min, 1 h ou 2 h.
 - **Mode engagement** : verrouille tes règles pour ne plus pouvoir les assouplir.
 - Aucune permission Internet : rien ne quitte le téléphone.

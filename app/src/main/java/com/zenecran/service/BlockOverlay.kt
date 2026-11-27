@@ -64,6 +64,9 @@ data class BlockInfo(
     val detail: String,
     val usedLine: String,
     val canExtend: Boolean,
+    val extMinutes: Int,
+    val waitSec: Int,
+    val quote: String,
     val onExtend: () -> Unit,
 )
 
@@ -148,7 +151,7 @@ private val quotes = listOf(
 
 @androidx.compose.runtime.Composable
 fun BlockScreen(info: BlockInfo, onClose: () -> Unit) {
-    val quote = remember { quotes.random() }
+    val quote = remember { info.quote.ifBlank { quotes.random() } }
     val pulse = rememberInfiniteTransition(label = "pulse")
     val scale by pulse.animateFloat(
         initialValue = 0.92f,
@@ -156,7 +159,7 @@ fun BlockScreen(info: BlockInfo, onClose: () -> Unit) {
         animationSpec = infiniteRepeatable(tween(1800, easing = FastOutSlowInEasing), RepeatMode.Reverse),
         label = "scale",
     )
-    var left by remember { mutableIntStateOf(15) }
+    var left by remember { mutableIntStateOf(info.waitSec) }
     LaunchedEffect(Unit) {
         while (left > 0) {
             delay(1000)
@@ -237,7 +240,10 @@ fun BlockScreen(info: BlockInfo, onClose: () -> Unit) {
                     enabled = left == 0,
                     modifier = Modifier.fillMaxWidth().height(50.dp),
                 ) {
-                    Text(if (left == 0) "+5 minutes (dernière chance)" else "+5 minutes dans $left s…")
+                    Text(
+                        if (left == 0) "+${info.extMinutes} minutes (dernière chance)"
+                        else "+${info.extMinutes} minutes dans $left s…"
+                    )
                 }
             }
         }

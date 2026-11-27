@@ -3,6 +3,7 @@ package com.zenecran.ui
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.zenecran.data.CustomRule
 import com.zenecran.data.InstalledApp
 import com.zenecran.data.Schedule
 import com.zenecran.data.RuleConfig
@@ -167,6 +168,58 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     fun setDiagnostic(on: Boolean) {
         Store.updateConfig { it.copy(diagnostic = on) }
         if (!on) Store.setDump("")
+    }
+
+    // ------------------------------------------------------------ personnalisation
+
+    fun setAccent(i: Int) {
+        Store.updateConfig { it.copy(accent = i) }
+    }
+
+    fun setAmoled(on: Boolean) {
+        Store.updateConfig { it.copy(amoled = on) }
+    }
+
+    fun setQuote(s: String) {
+        Store.updateConfig { it.copy(quote = s.take(120)) }
+    }
+
+    /** Réglages du bouton « +minutes ». Verrouillés pendant le mode engagement. */
+    fun setExt(waitSec: Int? = null, minutes: Int? = null, max: Int? = null) {
+        if (locked()) {
+            deny()
+            return
+        }
+        Store.updateConfig {
+            it.copy(
+                extWaitSec = waitSec ?: it.extWaitSec,
+                extMinutes = minutes ?: it.extMinutes,
+                extMax = max ?: it.extMax,
+            )
+        }
+    }
+
+    fun setWarn(min: Int) {
+        Store.updateConfig { it.copy(warnMin = min) }
+    }
+
+    fun setFeatureBack(back: Boolean) {
+        Store.updateConfig { it.copy(featureBack = back) }
+    }
+
+    // ------------------------------------------------------------ règles personnalisées
+
+    fun addCustomRule(r: CustomRule) {
+        Store.updateConfig { it.copy(customRules = it.customRules + r) }
+    }
+
+    fun deleteCustomRule(id: String) {
+        val c = Store.config.value
+        if (locked() && c.rules[id]?.enabled == true) {
+            deny()
+            return
+        }
+        Store.updateConfig { it.copy(customRules = it.customRules.filterNot { r -> r.id == id }, rules = it.rules - id) }
     }
 
     fun say(msg: String) {

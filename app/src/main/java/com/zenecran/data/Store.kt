@@ -86,10 +86,30 @@ object Store {
             )
         }
         o.put("schedules", schedules)
+        val custom = JSONArray()
+        c.customRules.forEach { r ->
+            custom.put(
+                JSONObject()
+                    .put("id", r.id)
+                    .put("pkg", r.pkg)
+                    .put("title", r.title)
+                    .put("labels", JSONArray(r.selectedLabels))
+                    .put("ids", JSONArray(r.ids))
+            )
+        }
+        o.put("custom", custom)
         o.put("goal", c.goalMin)
         o.put("focus", c.focusUntil)
         o.put("strict", c.strictUntil)
         o.put("diag", c.diagnostic)
+        o.put("accent", c.accent)
+        o.put("amoled", c.amoled)
+        o.put("quote", c.quote)
+        o.put("extMin", c.extMinutes)
+        o.put("extMax", c.extMax)
+        o.put("extWait", c.extWaitSec)
+        o.put("warn", c.warnMin)
+        o.put("fBack", c.featureBack)
         return o.toString()
     }
 
@@ -125,14 +145,34 @@ object Store {
                     )
                 }
             }
+            val custom = mutableListOf<CustomRule>()
+            o.optJSONArray("custom")?.let { arr ->
+                for (i in 0 until arr.length()) {
+                    val x = arr.getJSONObject(i)
+                    val lb = mutableListOf<String>()
+                    x.optJSONArray("labels")?.let { a -> for (j in 0 until a.length()) lb += a.getString(j) }
+                    val ids = mutableListOf<String>()
+                    x.optJSONArray("ids")?.let { a -> for (j in 0 until a.length()) ids += a.getString(j) }
+                    custom += CustomRule(x.getString("id"), x.getString("pkg"), x.optString("title", "Règle"), lb, ids)
+                }
+            }
             Config(
                 limits = limits,
                 rules = rules,
+                customRules = custom,
                 schedules = schedules,
                 goalMin = o.optInt("goal", 180),
                 focusUntil = o.optLong("focus", 0L),
                 strictUntil = o.optLong("strict", 0L),
                 diagnostic = o.optBoolean("diag", false),
+                accent = o.optInt("accent", 0),
+                amoled = o.optBoolean("amoled", false),
+                quote = o.optString("quote", ""),
+                extMinutes = o.optInt("extMin", 5),
+                extMax = o.optInt("extMax", 2),
+                extWaitSec = o.optInt("extWait", 15),
+                warnMin = o.optInt("warn", 5),
+                featureBack = o.optBoolean("fBack", true),
             )
         } catch (e: Exception) {
             Config()

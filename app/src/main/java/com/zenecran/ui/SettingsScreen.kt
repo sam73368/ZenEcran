@@ -1,6 +1,11 @@
 package com.zenecran.ui
 
 import androidx.compose.foundation.background
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.border
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -84,6 +89,79 @@ fun SettingsScreen(vm: MainViewModel, padding: PaddingValues) {
                     Text(fmtMin(cfg.goalMin), color = Z.teal, fontSize = 24.sp, fontWeight = FontWeight.Bold)
                     IconButton(onClick = { vm.setGoal(cfg.goalMin + 15) }) { Icon(Icons.Rounded.Add, null, tint = Z.textHi) }
                 }
+            }
+        }
+
+        // Apparence
+        item {
+            ZenCard {
+                Text("Apparence", color = Z.textHi, fontWeight = FontWeight.SemiBold)
+                Spacer(Modifier.height(12.dp))
+                Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Z.accents.forEachIndexed { i, c ->
+                        Box(
+                            Modifier
+                                .size(40.dp)
+                                .clip(CircleShape)
+                                .background(c)
+                                .then(if (cfg.accent == i) Modifier.border(3.dp, Z.textHi, CircleShape) else Modifier)
+                                .clickable { vm.setAccent(i) }
+                        )
+                    }
+                }
+                Spacer(Modifier.height(6.dp))
+                Text(Z.accentNames[cfg.accent.coerceIn(0, Z.accentNames.size - 1)], color = Z.textLo, fontSize = 12.sp)
+                Spacer(Modifier.height(8.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Column(Modifier.weight(1f)) {
+                        Text("Noir AMOLED", color = Z.textHi)
+                        Text("Fond noir pur, économise la batterie sur écran OLED.", color = Z.textLo, fontSize = 12.sp)
+                    }
+                    Switch(
+                        checked = cfg.amoled,
+                        onCheckedChange = { vm.setAmoled(it) },
+                        colors = SwitchDefaults.colors(checkedTrackColor = Z.teal, checkedThumbColor = Z.onTeal),
+                    )
+                }
+            }
+        }
+
+        // Écran de blocage
+        item {
+            ZenCard {
+                Text("Écran de blocage", color = Z.textHi, fontWeight = FontWeight.SemiBold)
+                Text("Ce que tu vois quand une appli est bloquée.", color = Z.textLo, fontSize = 13.sp)
+                Spacer(Modifier.height(10.dp))
+                OutlinedTextField(
+                    value = cfg.quote,
+                    onValueChange = { vm.setQuote(it) },
+                    modifier = Modifier.fillMaxWidth(),
+                    placeholder = { Text("Ton message (vide = phrases au hasard)") },
+                    shape = RoundedCornerShape(16.dp),
+                    maxLines = 3,
+                )
+                Spacer(Modifier.height(14.dp))
+                Text("Bouton « + minutes »", color = Z.textHi, fontSize = 14.sp)
+                if (strictOn) Text("Verrouillé par le mode engagement.", color = Z.amber, fontSize = 12.sp)
+                Spacer(Modifier.height(6.dp))
+                Text("Attente avant de pouvoir l'utiliser", color = Z.textLo, fontSize = 12.sp)
+                ChipRow(listOf("Aucune" to 0, "15 s" to 15, "30 s" to 30, "60 s" to 60), cfg.extWaitSec, !strictOn) { vm.setExt(waitSec = it) }
+                Text("Minutes accordées", color = Z.textLo, fontSize = 12.sp)
+                ChipRow(listOf("5 min" to 5, "10 min" to 10, "15 min" to 15), cfg.extMinutes, !strictOn) { vm.setExt(minutes = it) }
+                Text("Maximum par jour et par appli", color = Z.textLo, fontSize = 12.sp)
+                ChipRow(listOf("Désactivé" to 0, "1" to 1, "2" to 2, "3" to 3, "5" to 5), cfg.extMax, !strictOn) { vm.setExt(max = it) }
+            }
+        }
+
+        // Comportement
+        item {
+            ZenCard {
+                Text("Comportement", color = Z.textHi, fontWeight = FontWeight.SemiBold)
+                Spacer(Modifier.height(10.dp))
+                Text("Prévenir avant la limite", color = Z.textLo, fontSize = 12.sp)
+                ChipRow(listOf("Non" to 0, "5 min avant" to 5, "10 min avant" to 10), cfg.warnMin, true) { vm.setWarn(it) }
+                Text("Quand un Reel / une story est bloqué", color = Z.textLo, fontSize = 12.sp)
+                ChipRow(listOf("Retour" to 1, "Accueil" to 0), if (cfg.featureBack) 1 else 0, true) { vm.setFeatureBack(it == 1) }
             }
         }
 
@@ -193,18 +271,47 @@ fun SettingsScreen(vm: MainViewModel, padding: PaddingValues) {
     }
 
     if (confirmStrict) {
-        AlertDialog(
-            onDismissRequest = { confirmStrict = false },
-            containerColor = Z.card,
-            title = { Text("Activer l'engagement ?") },
-            text = { Text("Tu ne pourras pas l'annuler avant la fin de la durée choisie. Tes règles actuelles seront verrouillées.") },
-            confirmButton = {
-                TextButton(onClick = {
-                    vm.enableStrict(listOf(0, 24, 168)[strictChoice])
-                    confirmStrict = false
-                }) { Text("Oui, je m'engage") }
+        StrictDialog(
+            onDismiss = { confirmStrict = false },
+            onConfirm = {
+                vm.enableStrict(listOf(0, 24, 168)[strictChoice])
+                confirmStrict = false
             },
-            dismissButton = { TextButton(onClick = { confirmStrict = false }) { Text("Annuler") } },
         )
     }
+}
+
+@Composable
+private fun ChipRow(options: List<Pair<String, Int>>, selected: Int, enabled: Boolean, onSelect: (Int) -> Unit) {
+    Row(
+        Modifier
+            .horizontalScroll(rememberScrollState())
+            .padding(bottom = 10.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        options.forEach { (label, value) ->
+            FilterChip(
+                selected = selected == value,
+                onClick = { onSelect(value) },
+                enabled = enabled,
+                label = { Text(label) },
+                colors = FilterChipDefaults.filterChipColors(
+                    selectedContainerColor = Z.teal,
+                    selectedLabelColor = Z.onTeal,
+                ),
+            )
+        }
+    }
+}
+
+@Composable
+private fun StrictDialog(onDismiss: () -> Unit, onConfirm: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        containerColor = Z.card,
+        title = { Text("Activer l'engagement ?") },
+        text = { Text("Tu ne pourras pas l'annuler avant la fin de la durée choisie. Tes règles actuelles seront verrouillées.") },
+        confirmButton = { TextButton(onClick = onConfirm) { Text("Oui, je m'engage") } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text("Annuler") } },
+    )
 }
