@@ -95,12 +95,40 @@ class GuardService : AccessibilityService() {
         refreshLists()
         main.removeCallbacks(ticker)
         main.post(ticker)
+        startWatchdog()
         Log.i(TAG, "SERVICE_CONNECTED")
     }
 
     override fun onInterrupt() {}
 
+    @Volatile private var alive = true
+
+    /** Chien de garde : si la boucle principale ne tourne plus, note où elle est bloquée et la relance. */
+    private fun startWatchdog() {
+        val t = Thread {
+            while (alive) {
+                try {
+                    Thread.sleep(5000)
+                } catch (e: InterruptedException) {
+                    return@Thread
+                }
+                val stale = SystemClock.elapsedRealtime() - Store.beat.value
+                if (alive && stale > 6000) {
+                    val stack = Looper.getMainLooper().thread.stackTrace.take(15).joinToString(" <- ") { "${it.className}.${it.methodName}:${it.lineNumber}" }
+                    Log.w(TAG, "WATCHDOG boucle arrêtée depuis ${stale} ms ; fil principal : $stack")
+                    main.removeCallbacks(ticker)
+                    main.post(ticker)
+                }
+            }
+        }
+        t.isDaemon = true
+        t.name = "zen-watchdog"
+        t.start()
+    }
+
     override fun onUnbind(intent: Intent?): Boolean {
+        Log.i(TAG, "SERVICE_UNBIND")
+        alive = false
         shutdown()
         return super.onUnbind(intent)
     }
@@ -227,6 +255,11 @@ class GuardService : AccessibilityService() {
         val pm = getSystemService(PowerManager::class.java)
         if (!pm.isInteractive) {
             lastCountAt = 0L
+            val n = SystemClock.elapsedRealtime()
+            if (n - lastFgLog > 5000) {
+                lastFgLog = n
+                Log.i(TAG, "FG écran éteint")
+            }
             return
         }
         val nowElapsed = SystemClock.elapsedRealtime()

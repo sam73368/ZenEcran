@@ -82,7 +82,8 @@ else
     ko "jamais bloqué après 110 s"
     shot 01_echec_limite
 fi
-adb logcat -d -s ZenEcran:I | grep " FG " | tail -4 | sed 's/^/    /' >> "$R"
+adb logcat -d -s ZenEcran:V | grep -E " FG |WATCHDOG|UNBIND" | tail -8 | sed 's/^/    /' >> "$R"
+adb shell dumpsys power | grep -E "mWakefulness=|mHoldingDisplaySuspendBlocker" | sed 's/^/    /' >> "$R"
 adb logcat -d -s ZenEcran:I | grep USAGE | tail -3 | sed 's/^/    /' >> "$R"
 
 # ------------------------------------------------------------------ 2. horaire
