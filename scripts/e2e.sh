@@ -50,7 +50,7 @@ set_config() { # JSON de configuration
     stop_fakes
     printf '<?xml version="1.0" encoding="utf-8" standalone="yes" ?>\n<map>\n    <string name="config">%s</string>\n</map>\n' "$1" > /tmp/zen.xml
     adb push /tmp/zen.xml /data/local/tmp/zen.xml > /dev/null
-    adb shell "cat /data/local/tmp/zen.xml | run-as $ZEN sh -c 'mkdir -p shared_prefs && cat > shared_prefs/zen.xml'"
+    adb shell "cat /data/local/tmp/zen.xml | run-as $ZEN sh -c 'mkdir -p shared_prefs && rm -f shared_prefs/zen.xml.bak && cat > shared_prefs/zen.xml'"
     adb shell input keyevent KEYCODE_HOME
     svc_on
 }
@@ -66,6 +66,14 @@ adb install -r fake-instagram/build/outputs/apk/debug/fake-instagram-debug.apk |
 adb install -r fake-facebook/build/outputs/apk/debug/fake-facebook-debug.apk | tail -1
 adb shell appops set $ZEN GET_USAGE_STATS allow
 adb shell dumpsys deviceidle whitelist +$ZEN > /dev/null
+adb shell settings put system screen_off_timeout 1800000
+
+# Échauffement : laisser Android finir son premier démarrage (optimisation des applis, etc.)
+until [ "$(adb shell getprop sys.boot_completed | tr -d '\r')" = "1" ]; do sleep 2; done
+for a in $IG/.MainActivity $FB/.MainActivity $ZEN/.MainActivity; do adb shell am start -W -n $a > /dev/null; sleep 3; done
+adb shell input keyevent KEYCODE_HOME
+adb shell cmd package bg-dexopt-job > /dev/null 2>&1
+sleep 30
 adb logcat -c
 
 # ------------------------------------------------------------------ 1. limite quotidienne
@@ -83,7 +91,7 @@ else
     shot 01_echec_limite
 fi
 adb logcat -d -s ZenEcran:V | grep -E " FG |WATCHDOG|UNBIND" | tail -8 | sed 's/^/    /' >> "$R"
-adb shell dumpsys power | grep -E "mWakefulness=|mHoldingDisplaySuspendBlocker" | sed 's/^/    /' >> "$R"
+echo "    services d'accessibilité activés : $(adb shell settings get secure enabled_accessibility_services | tr -d '\r')" >> "$R"
 adb logcat -d -s ZenEcran:I | grep USAGE | tail -3 | sed 's/^/    /' >> "$R"
 
 # ------------------------------------------------------------------ 2. horaire
