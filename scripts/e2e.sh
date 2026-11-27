@@ -122,7 +122,7 @@ if wait_log "BLOCK_APP pkg=$FB reason=focus" 10; then ok "Faux Facebook bloqué 
 sleep 1; shot 03_concentration
 
 # ------------------------------------------------------------------ 4. contenus
-feature_test() { # règle, activité, nom
+feature_test() { # règle, activité, nom, action attendue (facultatif)
     set_config "{\"rules\":{\"$1\":{\"e\":true,\"b\":0}},\"diag\":true}"
     local pkg=${2%%/*}
     start "$pkg/.MainActivity"
@@ -130,7 +130,12 @@ feature_test() { # règle, activité, nom
     start "$2"
     if wait_log "BLOCK_FEATURE id=$1" 10; then
         ok "$3 détecté et bloqué"
+        if [ -n "${4:-}" ]; then
+            act=$(adb logcat -d -s ZenEcran:I | grep "BLOCK_FEATURE id=$1" | tail -1 | sed 's/.*action=//')
+            [ "$act" = "$4" ] && ok "$3 : action « $4 » (reste dans l'appli)" || ko "$3 : action « $act » au lieu de « $4 »"
+        fi
         sleep 2
+        top | grep -q "${2%%/*}" && ok "$3 : toujours dans l'appli" || ko "$3 : a quitté l'appli"
         top | grep -q "$2" && ko "$3 encore ouvert après le blocage" || ok "$3 fermé"
     else
         ko "$3 NON détecté"
@@ -140,11 +145,11 @@ feature_test() { # règle, activité, nom
     fi
 }
 section "Contenus (Reels, Stories)"
-feature_test ig_reels "$IG/.ReelsActivity" "Reels Instagram"
-feature_test ig_stories "$IG/.StoryActivity" "Stories Instagram"
-feature_test fb_stories "$FB/.StoryViewerActivity" "Stories Facebook"
-feature_test fb_reels "$FB/.ReelsTabActivity" "Onglet Reels Facebook"
-feature_test fb_reels "$FB/.ReelsViewerActivity" "Lecteur Reels Facebook (structure)"
+feature_test ig_reels "$IG/.ReelsActivity" "Reels Instagram" redirect
+feature_test ig_stories "$IG/.StoryActivity" "Stories Instagram" back
+feature_test fb_stories "$FB/.StoryViewerActivity" "Stories Facebook" back
+feature_test fb_reels "$FB/.ReelsTabActivity" "Onglet Reels Facebook" redirect
+feature_test fb_reels "$FB/.ReelsViewerActivity" "Lecteur Reels Facebook (structure)" back
 
 section "Snapchat : onglets Stories et Spotlight renvoyés vers le Chat"
 set_config '{"rules":{"sc_stories":{"e":true,"b":0},"sc_spotlight":{"e":true,"b":0}},"diag":true}'

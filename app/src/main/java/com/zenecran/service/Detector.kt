@@ -104,6 +104,45 @@ object Detector {
         return r.top < ctx.screenH * 0.22f
     }
 
+    /**
+     * Appuie sur l'onglet d'accueil de l'appli : d'abord par identifiant, puis par libellé
+     * (description « Accueil », « Accueil, onglet 1 sur 6 »…, puis texte). Renvoie false s'il n'est pas visible.
+     */
+    fun clickHome(ctx: ScreenCtx, d: FeatureDef): Boolean {
+        for (id in d.homeIds) if (clickById(ctx, id)) return true
+        if (d.homeDescs.isEmpty()) return false
+        fun matches(s: String?): Boolean {
+            val v = s?.trim() ?: return false
+            return d.homeDescs.any { h ->
+                v.equals(h, true) || v.startsWith("$h,", true) || v.startsWith("$h ", true)
+            }
+        }
+        for (useText in listOf(false, true)) {
+            var count = 0
+            val queue = ArrayDeque<AccessibilityNodeInfo>()
+            ctx.roots.forEach { queue.addLast(it) }
+            while (queue.isNotEmpty() && count < 3000) {
+                val n = queue.removeFirst()
+                count++
+                val label = if (useText) n.text?.toString() else n.contentDescription?.toString()
+                if (n.isVisibleToUser && matches(label) && clickNodeOrParent(n, 2)) return true
+                for (i in 0 until n.childCount) n.getChild(i)?.let { queue.addLast(it) }
+            }
+        }
+        return false
+    }
+
+    private fun clickNodeOrParent(n: AccessibilityNodeInfo, maxHops: Int): Boolean {
+        var cur: AccessibilityNodeInfo? = n
+        var hops = 0
+        while (cur != null && hops <= maxHops) {
+            if (cur.isClickable && cur.performAction(AccessibilityNodeInfo.ACTION_CLICK)) return true
+            cur = cur.parent
+            hops++
+        }
+        return false
+    }
+
     /** Appuie sur le bouton qui porte cet identifiant (ou sur son parent appuyable). */
     fun clickById(ctx: ScreenCtx, id: String): Boolean {
         for (r in ctx.roots) {

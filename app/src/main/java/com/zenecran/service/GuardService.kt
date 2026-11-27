@@ -57,6 +57,7 @@ class GuardService : AccessibilityService() {
     private val warned = HashSet<String>()
     private var lastFeatureAction = 0L
     private var lastFeatureId: String? = null
+    private var featureAttempts = 0
     private var lastAppBlock = 0L
     private var lastFlush = 0L
     private var lastDump = 0L
@@ -465,13 +466,18 @@ class GuardService : AccessibilityService() {
         }
     }
 
+    /**
+     * Ramène à l'accueil DE L'APPLI : appui sur son onglet d'accueil, sinon « retour ».
+     * On ne quitte l'appli (écran d'accueil du téléphone) qu'après 3 essais ratés de suite,
+     * ou si l'utilisateur l'a choisi dans les réglages.
+     */
     private fun enforceFeature(d: FeatureDef, hard: Boolean, screen: ScreenCtx) {
         val now = SystemClock.elapsedRealtime()
-        // Si l'action n'a pas suffi juste avant, on renvoie à l'accueil.
-        val repeated = now - lastFeatureAction < 5000 && lastFeatureId == d.id
-        val goHome = repeated || !Store.config.value.featureBack
-        // Onglet à éviter : on appuie directement sur un autre onglet (ex. Chat) au lieu de « retour ».
-        val redirected = !repeated && d.redirectId != null && Detector.clickById(screen, d.redirectId)
+        if (now - lastFeatureAction > 8000 || lastFeatureId != d.id) featureAttempts = 0
+        featureAttempts++
+        val repeated = featureAttempts > 1
+        val goHome = featureAttempts >= 3 || !Store.config.value.featureBack
+        val redirected = !goHome && Detector.clickHome(screen, d)
         if (!redirected) performGlobalAction(if (goHome) GLOBAL_ACTION_HOME else GLOBAL_ACTION_BACK)
         lastFeatureAction = now
         lastFeatureId = d.id

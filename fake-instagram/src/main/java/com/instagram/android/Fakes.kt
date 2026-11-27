@@ -33,6 +33,20 @@ class ReelsActivity : Activity() {
     override fun onCreate(b: Bundle?) {
         super.onCreate(b)
         screen("Faux Instagram : REELS", Color.rgb(255, 200, 200), R.id.clips_viewer_view_pager)
+        // Barre du bas avec l'onglet d'accueil, comme dans Instagram
+        val home = TextView(this)
+        home.id = R.id.feed_tab
+        home.text = "Accueil"
+        home.contentDescription = "Accueil"
+        home.textSize = 20f
+        home.setBackgroundColor(Color.LTGRAY)
+        home.gravity = Gravity.CENTER
+        home.setOnClickListener {
+            android.util.Log.i("FakeIG", "TAB=Accueil")
+            startActivity(android.content.Intent(this, MainActivity::class.java))
+            finish()
+        }
+        addContentView(home, FrameLayout.LayoutParams(-1, 150, Gravity.BOTTOM))
     }
 }
 

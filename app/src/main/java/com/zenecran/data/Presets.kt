@@ -12,7 +12,8 @@ data class AppDef(val pkg: String, val label: String)
  *  - fullscreenVideo : un lecteur vidéo plein écran qui défile (structure des Reels Facebook)
  *  - titles : un texte visible en HAUT de l'écran (titre de l'onglet) égal à ce mot, ex. « Stories »
  *  - selectedIds : un élément avec cet identifiant qui est SÉLECTIONNÉ (onglet actif de la barre du bas)
- * Action : redirectId = identifiant d'un bouton sur lequel appuyer (ex. l'onglet Chat) au lieu de faire « retour ».
+ * Action : on appuie sur l'onglet d'accueil de l'appli (homeIds = identifiants, homeDescs = libellés
+ * comme « Accueil »). S'il n'est pas visible (lecteur plein écran), on fait « retour ».
  * Ces repères dépendent des versions des applis : le Mode diagnostic permet de les vérifier.
  */
 data class FeatureDef(
@@ -28,7 +29,8 @@ data class FeatureDef(
     val fullscreenVideo: Boolean = false,
     val titles: List<String> = emptyList(),
     val selectedIds: List<String> = emptyList(),
-    val redirectId: String? = null,
+    val homeIds: List<String> = emptyList(),
+    val homeDescs: List<String> = emptyList(),
     val experimental: Boolean = false,
 )
 
@@ -67,15 +69,18 @@ object Presets {
             ),
             selectedPrefixes = listOf("Reels,", "Reels"),
             fullscreenVideo = true,
+            homeDescs = listOf("Accueil", "Home"),
         ),
         FeatureDef(
             id = "fb_stories", pkg = "com.facebook.katana",
             title = "Stories", subtitle = "Lecteur de stories",
+            homeDescs = listOf("Accueil", "Home"),
             activities = listOf("StoryViewerActivity"),
         ),
         FeatureDef(
             id = "fb_video", pkg = "com.facebook.katana",
             title = "Vidéos (Watch)", subtitle = "Onglet Vidéo",
+            homeDescs = listOf("Accueil", "Home"),
             selectedPrefixes = listOf("Video,", "Vidéo,", "Vidéos,", "Watch,"),
             experimental = true,
         ),
@@ -89,11 +94,14 @@ object Presets {
         FeatureDef(
             id = "ig_reels", pkg = "com.instagram.android",
             title = "Reels", subtitle = "Lecteur Reels (onglet, fil, Explorer)",
+            homeIds = listOf("feed_tab"),
+            homeDescs = listOf("Accueil", "Home"),
             ids = listOf("clips_viewer_view_pager"),
         ),
         FeatureDef(
             id = "ig_stories", pkg = "com.instagram.android",
             title = "Stories", subtitle = "Lecteur de stories",
+            homeIds = listOf("feed_tab"),
             ids = listOf("reel_viewer_root"),
         ),
         // ---------------- Snapchat
@@ -103,7 +111,7 @@ object Presets {
             ids = listOf("spotlight_container"),
             titles = listOf("Spotlight"),
             selectedIds = listOf("ngs_spotlight_icon_container"),
-            redirectId = "ngs_chat_icon_container",
+            homeIds = listOf("ngs_chat_icon_container"),
         ),
         FeatureDef(
             id = "sc_stories", pkg = "com.snapchat.android",
@@ -111,29 +119,33 @@ object Presets {
             ids = listOf("opera_viewer"),
             titles = listOf("Stories"),
             selectedIds = listOf("ngs_community_icon_container"),
-            redirectId = "ngs_chat_icon_container",
+            homeIds = listOf("ngs_chat_icon_container"),
         ),
         // ---------------- YouTube
         FeatureDef(
             id = "yt_shorts", pkg = "com.google.android.youtube",
             title = "Shorts", subtitle = "Lecteur Shorts (les vidéos normales restent permises)",
+            homeDescs = listOf("Accueil", "Home"),
             ids = listOf("reel_player_page_container"),
         ),
         // ---------------- TikTok
         FeatureDef(
             id = "tt_videos", pkg = "com.zhiliaoapp.musically",
             title = "Fil de vidéos", subtitle = "Toutes les vidéos (Pour toi, Abonnements)",
+            homeDescs = listOf("Boîte de réception", "Inbox", "Messages"),
             ids = listOf("player_view"),
         ),
         FeatureDef(
             id = "ttl_videos", pkg = "com.zhiliaoapp.musically.go",
             title = "Fil de vidéos", subtitle = "Toutes les vidéos de TikTok Lite",
+            homeDescs = listOf("Boîte de réception", "Inbox", "Messages"),
             ids = listOf("simplayer_api_player_view"),
         ),
         // ---------------- WhatsApp
         FeatureDef(
             id = "wa_status", pkg = "com.whatsapp",
             title = "Statuts / Actus", subtitle = "Onglet Actus (statuts et chaînes)",
+            homeDescs = listOf("Discussions", "Chats"),
             selectedLabels = listOf("actus", "updates", "statut", "status"),
             experimental = true,
         ),

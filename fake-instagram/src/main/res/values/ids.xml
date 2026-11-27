@@ -2,4 +2,5 @@
 <resources>
     <item name="clips_viewer_view_pager" type="id" />
     <item name="reel_viewer_root" type="id" />
+    <item name="feed_tab" type="id" />
 </resources>

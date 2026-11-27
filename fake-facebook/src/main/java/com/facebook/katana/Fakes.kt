@@ -25,6 +25,13 @@ private fun Activity.tabs(selected: String, body: String) {
         t.contentDescription = "$name, onglet ${i + 1} sur 4"
         t.isSelected = name == selected
         t.isClickable = true
+        if (name == "Accueil" && selected != "Accueil") {
+            t.setOnClickListener {
+                android.util.Log.i("FakeFB", "TAB=Accueil")
+                startActivity(android.content.Intent(this, MainActivity::class.java))
+                finish()
+            }
+        }
         bar.addView(t)
     }
     col.addView(bar)

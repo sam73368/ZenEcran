@@ -167,7 +167,7 @@ fun SettingsScreen(vm: MainViewModel, padding: PaddingValues) {
                 Text("Prévenir avant la limite", color = Z.textLo, fontSize = 12.sp)
                 ChipRow(listOf("Non" to 0, "5 min avant" to 5, "10 min avant" to 10), cfg.warnMin, true) { vm.setWarn(it) }
                 Text("Quand un Reel / une story est bloqué", color = Z.textLo, fontSize = 12.sp)
-                ChipRow(listOf("Retour" to 1, "Accueil" to 0), if (cfg.featureBack) 1 else 0, true) { vm.setFeatureBack(it == 1) }
+                ChipRow(listOf("Revenir à l'accueil de l'appli" to 1, "Quitter l'appli" to 0), if (cfg.featureBack) 1 else 0, true) { vm.setFeatureBack(it == 1) }
             }
         }
 
