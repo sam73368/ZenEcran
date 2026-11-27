@@ -88,7 +88,7 @@ fun Pill(text: String, color: Color = Z.cardHi, textColor: Color = Z.textHi, mod
             .background(color)
             .padding(horizontal = 10.dp, vertical = 4.dp)
     ) {
-        Text(text, color = textColor, fontSize = 12.sp, fontWeight = FontWeight.Medium)
+        Text(text, color = textColor, fontSize = 12.sp, fontWeight = FontWeight.Medium, maxLines = 1, softWrap = false)
     }
 }
 
@@ -347,3 +347,12 @@ fun StatusCard(ui: UiState, alwaysShow: Boolean) {
         }
     }
 }
+
+@Composable
+fun zenSwitchColors() = androidx.compose.material3.SwitchDefaults.colors(
+    checkedTrackColor = Z.teal,
+    checkedThumbColor = Z.onTeal,
+    uncheckedTrackColor = Z.cardHi,
+    uncheckedThumbColor = Z.textLo,
+    uncheckedBorderColor = Z.textLo.copy(alpha = 0.6f),
+)

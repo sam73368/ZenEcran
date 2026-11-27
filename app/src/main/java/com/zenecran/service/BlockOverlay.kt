@@ -223,7 +223,7 @@ fun BlockScreen(info: BlockInfo, onClose: () -> Unit) {
                 }
             }
             Spacer(Modifier.height(28.dp))
-            Text(info.title, color = Z.textHi, fontSize = 28.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
+            Text(info.title, color = Z.textHi, fontSize = 28.sp, lineHeight = 34.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
             Spacer(Modifier.height(10.dp))
             Text(info.detail, color = Z.textLo, fontSize = 16.sp, textAlign = TextAlign.Center)
             if (info.usedLine.isNotEmpty()) {

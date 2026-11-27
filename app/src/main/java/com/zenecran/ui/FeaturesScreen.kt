@@ -298,7 +298,7 @@ private fun FeatureRow(
                     Text(f.title, color = Z.textHi, fontWeight = FontWeight.SemiBold, fontSize = 16.sp)
                     if (f.experimental) {
                         Spacer(Modifier.width(8.dp))
-                        Pill("expérimental", Z.cardHi, Z.amber)
+                        Pill("bêta", Z.cardHi, Z.amber)
                     }
                 }
                 Text(f.subtitle, color = Z.textLo, fontSize = 13.sp)
@@ -307,7 +307,7 @@ private fun FeatureRow(
                 checked = rc.enabled,
                 onCheckedChange = { vm.setRule(f.id, it, rc.budgetMin) },
                 enabled = !(locked && rc.enabled),
-                colors = SwitchDefaults.colors(checkedTrackColor = Z.teal, checkedThumbColor = Z.onTeal),
+                colors = zenSwitchColors(),
             )
         }
         if (rc.enabled) {

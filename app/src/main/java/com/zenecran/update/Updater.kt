@@ -55,7 +55,9 @@ object Updater {
                 val a = assets.getJSONObject(i)
                 if (a.optString("name").endsWith(".apk")) url = a.optString("browser_download_url")
             }
-            val notes = body.lines().filterNot { it.startsWith("build=") }.joinToString("\n").trim()
+            val notes = body.lines().map { it.trim() }
+                .firstOrNull { it.isNotEmpty() && !it.startsWith("build=") && !it.contains("Co-Authored") && !it.contains("Claude-Session") }
+                .orEmpty()
             if (url != null && build > currentBuild) UpdateInfo(build, name, notes, url) else null
         } finally {
             c.disconnect()

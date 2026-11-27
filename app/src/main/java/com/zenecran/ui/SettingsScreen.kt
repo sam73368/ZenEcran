@@ -126,7 +126,7 @@ fun SettingsScreen(vm: MainViewModel, padding: PaddingValues) {
                     Switch(
                         checked = cfg.amoled,
                         onCheckedChange = { vm.setAmoled(it) },
-                        colors = SwitchDefaults.colors(checkedTrackColor = Z.teal, checkedThumbColor = Z.onTeal),
+                        colors = zenSwitchColors(),
                     )
                 }
             }
@@ -223,7 +223,7 @@ fun SettingsScreen(vm: MainViewModel, padding: PaddingValues) {
                     Switch(
                         checked = cfg.diagnostic,
                         onCheckedChange = { vm.setDiagnostic(it) },
-                        colors = SwitchDefaults.colors(checkedTrackColor = Z.teal, checkedThumbColor = Z.onTeal),
+                        colors = zenSwitchColors(),
                     )
                 }
                 if (cfg.diagnostic) {

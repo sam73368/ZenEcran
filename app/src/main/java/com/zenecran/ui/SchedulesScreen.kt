@@ -149,7 +149,7 @@ fun SchedulesScreen(vm: MainViewModel, padding: PaddingValues) {
                     Switch(
                         checked = s.enabled,
                         onCheckedChange = { vm.toggleSchedule(s.id, it) },
-                        colors = SwitchDefaults.colors(checkedTrackColor = Z.teal, checkedThumbColor = Z.onTeal),
+                        colors = zenSwitchColors(),
                     )
                 }
                 Spacer(Modifier.height(12.dp))
