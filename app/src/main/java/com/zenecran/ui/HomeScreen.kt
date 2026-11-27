@@ -89,19 +89,7 @@ fun HomeScreen(vm: MainViewModel, padding: PaddingValues) {
             }
         }
 
-        if (!ui.hasUsage) {
-            item {
-                NoticeCard(
-                    title = "Autorise l'accès aux statistiques",
-                    body = "Sans cette autorisation, Zen Écran ne peut pas mesurer ton temps d'écran ni appliquer tes limites quotidiennes.",
-                    action = "Ouvrir le réglage",
-                    onClick = { openUsageAccess(ctx) },
-                )
-            }
-        }
-        if (!ui.hasAccessibility) {
-            item { AccessibilityNotice() }
-        }
+        if (ui.loaded) item { StatusCard(ui, alwaysShow = false) }
 
         item {
             ZenCard {

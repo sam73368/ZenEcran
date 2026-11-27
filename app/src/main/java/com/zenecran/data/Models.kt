@@ -35,6 +35,7 @@ data class CustomRule(
     val title: String,
     val selectedLabels: List<String> = emptyList(),
     val ids: List<String> = emptyList(),
+    val activities: List<String> = emptyList(),
 )
 
 data class Config(
@@ -62,7 +63,7 @@ data class Config(
     fun allFeatures(): List<FeatureDef> = Presets.features + customRules.map {
         FeatureDef(
             id = it.id, pkg = it.pkg, title = it.title, subtitle = "Règle personnalisée",
-            ids = it.ids, selectedLabels = it.selectedLabels,
+            ids = it.ids, selectedLabels = it.selectedLabels, activities = it.activities,
         )
     }
 

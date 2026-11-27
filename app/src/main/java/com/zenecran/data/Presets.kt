@@ -3,12 +3,14 @@ package com.zenecran.data
 data class AppDef(val pkg: String, val label: String)
 
 /**
- * Une fonctionnalité repérable à l'intérieur d'une appli.
- * Détection :
- *  - ids : un élément visible dont l'identifiant (après "id/") est exactement l'un de ces noms
- *  - selectedLabels : un élément SÉLECTIONNÉ (onglet actif) dont le texte ou la description contient l'un de ces mots (minuscules)
- * Ces repères dépendent de la version des applis : ils peuvent changer après une mise à jour.
- * Le « Mode diagnostic » dans les réglages permet de les ajuster, et les règles personnalisées d'en créer.
+ * Une fonctionnalité repérable à l'intérieur d'une appli. Elle est détectée si AU MOINS UN repère correspond :
+ *  - ids : un élément visible avec cet identifiant (ex. "clips_viewer_view_pager"), cherché directement par Android
+ *  - descs : un élément visible dont la description vaut exactement ce texte
+ *  - selectedPrefixes : un élément SÉLECTIONNÉ (onglet actif) dont la description/le texte commence par ce texte
+ *  - selectedLabels : un élément SÉLECTIONNÉ dont la description/le texte contient ce mot
+ *  - activities : l'écran (activité Android) ouvert contient ce nom (ex. "StoryViewerActivity")
+ *  - fullscreenVideo : un lecteur vidéo plein écran qui défile (structure des Reels Facebook)
+ * Ces repères dépendent des versions des applis : le Mode diagnostic permet de les vérifier.
  */
 data class FeatureDef(
     val id: String,
@@ -16,7 +18,11 @@ data class FeatureDef(
     val title: String,
     val subtitle: String,
     val ids: List<String> = emptyList(),
+    val descs: List<String> = emptyList(),
+    val selectedPrefixes: List<String> = emptyList(),
     val selectedLabels: List<String> = emptyList(),
+    val activities: List<String> = emptyList(),
+    val fullscreenVideo: Boolean = false,
     val experimental: Boolean = false,
 )
 
@@ -45,62 +51,78 @@ object Presets {
     )
 
     val features = listOf(
-        // Facebook
+        // ---------------- Facebook
         FeatureDef(
             id = "fb_reels", pkg = "com.facebook.katana",
-            title = "Reels", subtitle = "Onglet et lecteur Reels",
-            selectedLabels = listOf("reels"),
+            title = "Reels", subtitle = "Onglet Reels et lecteur plein écran",
+            descs = listOf(
+                "FbShortsComposerAttachmentComponentSpec_STICKER",
+                "FbShortsComposerAttachmentComponentSpec_GIF",
+            ),
+            selectedPrefixes = listOf("Reels,", "Reels"),
+            fullscreenVideo = true,
+        ),
+        FeatureDef(
+            id = "fb_stories", pkg = "com.facebook.katana",
+            title = "Stories", subtitle = "Lecteur de stories",
+            activities = listOf("StoryViewerActivity"),
         ),
         FeatureDef(
             id = "fb_video", pkg = "com.facebook.katana",
             title = "Vidéos (Watch)", subtitle = "Onglet Vidéo",
-            selectedLabels = listOf("vidéo", "video", "watch"),
+            selectedPrefixes = listOf("Video,", "Vidéo,", "Vidéos,", "Watch,"),
             experimental = true,
         ),
         FeatureDef(
-            id = "fbl_reels", pkg = "com.facebook.lite",
-            title = "Reels", subtitle = "Onglet Reels de Facebook Lite",
-            selectedLabels = listOf("reels"),
+            id = "fbl_video", pkg = "com.facebook.lite",
+            title = "Vidéos", subtitle = "Lecteur vidéo de Facebook Lite (Reels compris)",
+            ids = listOf("video_view"),
             experimental = true,
         ),
-        // Instagram
+        // ---------------- Instagram
         FeatureDef(
             id = "ig_reels", pkg = "com.instagram.android",
-            title = "Reels", subtitle = "Onglet et lecteur Reels",
+            title = "Reels", subtitle = "Lecteur Reels (onglet, fil, Explorer)",
             ids = listOf("clips_viewer_view_pager"),
-            selectedLabels = listOf("reels"),
         ),
         FeatureDef(
             id = "ig_stories", pkg = "com.instagram.android",
             title = "Stories", subtitle = "Lecteur de stories",
-            ids = listOf("reel_viewer_texture_view", "reel_viewer_media_layout", "reel_viewer_root"),
-            experimental = true,
+            ids = listOf("reel_viewer_root"),
         ),
-        // Snapchat
+        // ---------------- Snapchat
         FeatureDef(
             id = "sc_spotlight", pkg = "com.snapchat.android",
             title = "Spotlight", subtitle = "Fil de vidéos Spotlight",
-            selectedLabels = listOf("spotlight"),
-            experimental = true,
+            ids = listOf("spotlight_container"),
         ),
         FeatureDef(
             id = "sc_stories", pkg = "com.snapchat.android",
-            title = "Stories", subtitle = "Onglet Stories",
-            selectedLabels = listOf("stories"),
-            experimental = true,
+            title = "Stories", subtitle = "Lecteur de stories (amis et Discover)",
+            ids = listOf("opera_viewer"),
         ),
-        // YouTube
+        // ---------------- YouTube
         FeatureDef(
             id = "yt_shorts", pkg = "com.google.android.youtube",
-            title = "Shorts", subtitle = "Onglet et lecteur Shorts",
-            ids = listOf("reel_recycler", "reel_player_page_container"),
-            selectedLabels = listOf("shorts"),
+            title = "Shorts", subtitle = "Lecteur Shorts (les vidéos normales restent permises)",
+            ids = listOf("reel_player_page_container"),
         ),
-        // WhatsApp
+        // ---------------- TikTok
+        FeatureDef(
+            id = "tt_videos", pkg = "com.zhiliaoapp.musically",
+            title = "Fil de vidéos", subtitle = "Toutes les vidéos (Pour toi, Abonnements)",
+            ids = listOf("player_view"),
+        ),
+        FeatureDef(
+            id = "ttl_videos", pkg = "com.zhiliaoapp.musically.go",
+            title = "Fil de vidéos", subtitle = "Toutes les vidéos de TikTok Lite",
+            ids = listOf("simplayer_api_player_view"),
+        ),
+        // ---------------- WhatsApp
         FeatureDef(
             id = "wa_status", pkg = "com.whatsapp",
-            title = "Statuts", subtitle = "Onglet Actus / Statuts",
-            selectedLabels = listOf("statuts", "status", "actus", "updates", "mises à jour"),
+            title = "Statuts / Actus", subtitle = "Onglet Actus (statuts et chaînes)",
+            selectedLabels = listOf("actus", "updates", "statut", "status"),
             experimental = true,
         ),
     )

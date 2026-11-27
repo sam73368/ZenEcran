@@ -284,17 +284,20 @@ private fun ScheduleEditor(
             Column {
                 Text("Jours", color = Z.textLo, fontSize = 13.sp)
                 Spacer(Modifier.height(8.dp))
-                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     for (d in 1..7) {
-                        FilterChip(
-                            selected = d in days,
-                            onClick = { days = if (d in days) days - d else days + d },
-                            label = { Text(dayLetters[d - 1]) },
-                            colors = FilterChipDefaults.filterChipColors(
-                                selectedContainerColor = Z.teal,
-                                selectedLabelColor = Z.onTeal,
-                            ),
-                        )
+                        val on = d in days
+                        Box(
+                            Modifier
+                                .weight(1f)
+                                .height(40.dp)
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(if (on) Z.teal else Z.cardHi)
+                                .clickable { days = if (on) days - d else days + d },
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Text(dayLetters[d - 1], color = if (on) Z.onTeal else Z.textHi, fontWeight = FontWeight.SemiBold)
+                        }
                     }
                 }
                 Row {

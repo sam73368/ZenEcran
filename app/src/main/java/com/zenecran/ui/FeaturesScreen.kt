@@ -164,6 +164,7 @@ private fun CustomRuleEditor(vm: MainViewModel, installed: List<InstalledApp>, o
     var title by remember { mutableStateOf("") }
     var labels by remember { mutableStateOf("") }
     var ids by remember { mutableStateOf("") }
+    var acts by remember { mutableStateOf("") }
     var query by remember { mutableStateOf("") }
     val shown = installed.filter { it.label.contains(query, ignoreCase = true) }
     val chosen = installed.firstOrNull { it.pkg == pkg }
@@ -210,6 +211,14 @@ private fun CustomRuleEditor(vm: MainViewModel, installed: List<InstalledApp>, o
             )
         }
         item {
+            OutlinedTextField(
+                value = acts, onValueChange = { acts = it },
+                label = { Text("Nom de l'écran (activité) contient… (optionnel)") },
+                placeholder = { Text("ex. StoryViewerActivity") },
+                modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp),
+            )
+        }
+        item {
             Column {
                 Text(
                     if (chosen == null) "Choisis l'appli concernée" else "Appli : ${chosen.label}",
@@ -249,13 +258,14 @@ private fun CustomRuleEditor(vm: MainViewModel, installed: List<InstalledApp>, o
                     onClick = {
                         val l = labels.split(',').map { it.trim().lowercase() }.filter { it.isNotEmpty() }
                         val i = ids.split(',').map { it.trim() }.filter { it.isNotEmpty() }
+                        val a = acts.split(',').map { it.trim() }.filter { it.isNotEmpty() }
                         val p = pkg
                         when {
                             p == null -> vm.say("Choisis une appli.")
                             title.isBlank() -> vm.say("Donne un nom à la règle.")
-                            l.isEmpty() && i.isEmpty() -> vm.say("Indique au moins un mot ou un identifiant.")
+                            l.isEmpty() && i.isEmpty() && a.isEmpty() -> vm.say("Indique au moins un mot, un identifiant ou un écran.")
                             else -> {
-                                vm.addCustomRule(CustomRule(vm.newScheduleId(), p, title.trim(), l, i))
+                                vm.addCustomRule(CustomRule(vm.newScheduleId(), p, title.trim(), l, i, a))
                                 vm.say("Règle ajoutée : active-la dans la liste.")
                                 onClose()
                             }

@@ -63,8 +63,12 @@ import java.util.Locale
 @Composable
 fun SettingsScreen(vm: MainViewModel, padding: PaddingValues) {
     val cfg by Store.config.collectAsState()
-    val dump by Store.dump.collectAsState()
+    val ui by vm.ui.collectAsState()
+    val dumps by Store.dumps.collectAsState()
+    var dumpPkg by remember { mutableStateOf<String?>(null) }
     val clipboard = LocalClipboardManager.current
+    val ctx = androidx.compose.ui.platform.LocalContext.current
+    val labelOf = remember(ui.installed) { ui.installed.associate { it.pkg to it.label } }
     var strictChoice by remember { mutableIntStateOf(0) }
     var confirmStrict by remember { mutableStateOf(false) }
     val strictOn = cfg.isStrict()
@@ -77,6 +81,7 @@ fun SettingsScreen(vm: MainViewModel, padding: PaddingValues) {
         verticalArrangement = Arrangement.spacedBy(14.dp),
     ) {
         item { Text("Réglages", color = Z.textHi, fontSize = 30.sp, fontWeight = FontWeight.Bold) }
+        item { StatusCard(ui, alwaysShow = true) }
 
         // Objectif
         item {
@@ -209,8 +214,8 @@ fun SettingsScreen(vm: MainViewModel, padding: PaddingValues) {
                     Column(Modifier.weight(1f)) {
                         Text("Mode diagnostic", color = Z.textHi, fontWeight = FontWeight.SemiBold)
                         Text(
-                            "Pour réparer un blocage de Reels/Spotlight : active-le, ouvre l'appli sur l'écran voulu, " +
-                                "reviens ici, copie le texte et envoie-le-moi.",
+                            "Pour réparer ou créer un blocage : active-le, ouvre l'appli sur l'écran voulu " +
+                                "(ex. une story) 3 secondes, reviens ici, choisis l'appli et partage la capture.",
                             color = Z.textLo, fontSize = 13.sp,
                         )
                     }
@@ -222,13 +227,29 @@ fun SettingsScreen(vm: MainViewModel, padding: PaddingValues) {
                 }
                 if (cfg.diagnostic) {
                     Spacer(Modifier.height(12.dp))
-                    if (dump.isEmpty()) {
-                        Text("Rien de capturé pour l'instant. Ouvre une appli surveillée quelques secondes.", color = Z.amber, fontSize = 13.sp)
+                    if (dumps.isEmpty()) {
+                        Text("Rien de capturé pour l'instant. Ouvre une appli quelques secondes puis reviens.", color = Z.amber, fontSize = 13.sp)
                     } else {
+                        val sel = dumpPkg?.takeIf { it in dumps } ?: dumps.keys.last()
+                        Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            dumps.keys.forEach { p ->
+                                FilterChip(
+                                    selected = p == sel,
+                                    onClick = { dumpPkg = p },
+                                    label = { Text(labelOf[p] ?: p) },
+                                    colors = FilterChipDefaults.filterChipColors(
+                                        selectedContainerColor = Z.teal,
+                                        selectedLabelColor = Z.onTeal,
+                                    ),
+                                )
+                            }
+                        }
+                        Spacer(Modifier.height(8.dp))
+                        val dump = dumps[sel].orEmpty()
                         Box(
                             Modifier
                                 .fillMaxWidth()
-                                .heightIn(max = 240.dp)
+                                .heightIn(max = 260.dp)
                                 .clip(RoundedCornerShape(12.dp))
                                 .background(Z.bg)
                                 .padding(10.dp)
@@ -244,10 +265,21 @@ fun SettingsScreen(vm: MainViewModel, padding: PaddingValues) {
                             }
                         }
                         Spacer(Modifier.height(8.dp))
-                        OutlinedButton(onClick = {
-                            clipboard.setText(AnnotatedString(dump))
-                            vm.say("Capture copiée.")
-                        }) { Text("Copier la capture") }
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            OutlinedButton(onClick = {
+                                clipboard.setText(AnnotatedString(dump))
+                                vm.say("Capture copiée.")
+                            }) { Text("Copier") }
+                            Button(
+                                onClick = {
+                                    val send = android.content.Intent(android.content.Intent.ACTION_SEND)
+                                        .setType("text/plain")
+                                        .putExtra(android.content.Intent.EXTRA_TEXT, dump)
+                                    ctx.startActivity(android.content.Intent.createChooser(send, "Partager la capture"))
+                                },
+                                colors = ButtonDefaults.buttonColors(containerColor = Z.teal, contentColor = Z.onTeal),
+                            ) { Text("Partager") }
+                        }
                     }
                 }
             }

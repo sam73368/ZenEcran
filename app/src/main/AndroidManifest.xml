@@ -7,6 +7,9 @@
         android:name="android.permission.PACKAGE_USAGE_STATS"
         tools:ignore="ProtectedPermissions" />
 
+    <!-- Pour demander à ne pas être endormi par l'économiseur de batterie -->
+    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
+
     <!-- Volontairement AUCUNE permission INTERNET : tout reste sur le téléphone. -->
 
     <queries>

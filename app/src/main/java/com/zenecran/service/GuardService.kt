@@ -8,6 +8,8 @@ import android.os.PowerManager
 import android.os.SystemClock
 import android.util.Log
 import android.view.accessibility.AccessibilityEvent
+import android.view.accessibility.AccessibilityNodeInfo
+import android.view.accessibility.AccessibilityWindowInfo
 import android.view.inputmethod.InputMethodManager
 import android.widget.Toast
 import com.zenecran.data.Config
@@ -31,9 +33,9 @@ private sealed interface Reason {
 
 /**
  * Cœur de l'appli : tourne en arrière-plan comme service d'accessibilité.
- *  - repère l'appli au premier plan
- *  - bloque une appli si : limite quotidienne atteinte, plage horaire interdite, ou mode concentration
- *  - repère Reels / Spotlight / Shorts et les bloque (ou compte un budget de minutes)
+ *  - repère l'appli réellement au premier plan (fenêtre d'application qui a le focus)
+ *  - bloque une appli si : plage horaire interdite, mode concentration, ou limite quotidienne atteinte
+ *  - repère Reels / Stories / Spotlight / Shorts et les bloque (ou décompte un budget de minutes)
  */
 class GuardService : AccessibilityService() {
 
@@ -41,19 +43,24 @@ class GuardService : AccessibilityService() {
     private val worker: ExecutorService = Executors.newSingleThreadExecutor()
     private var overlay: BlockOverlay? = null
 
-    private var fgPkg: String? = null
+    /** Dernier paquet vu dans un événement (secours si la liste des fenêtres est vide). */
+    private var eventPkg: String? = null
+    private val activityByPkg = HashMap<String, String>()
     private var ignored: Set<String> = setOf("com.android.systemui", "android")
     private var protectedPkgs: Set<String> = emptySet()
-    private var ignoredAt = 0L
+    private var listsAt = 0L
 
     @Volatile private var usage: Map<String, Long> = emptyMap()
     @Volatile private var usageBusy = false
     private var usageAt = 0L
 
     private val warned = HashSet<String>()
-    private var lastEnforce = 0L
+    private var lastFeatureAction = 0L
+    private var lastFeatureId: String? = null
+    private var lastAppBlock = 0L
     private var lastFlush = 0L
     private var lastDump = 0L
+    private var scanPending = false
 
     private val ticker = object : Runnable {
         override fun run() {
@@ -66,14 +73,26 @@ class GuardService : AccessibilityService() {
         }
     }
 
+    private val quickScan = Runnable {
+        scanPending = false
+        try {
+            val pkg = currentApp() ?: return@Runnable
+            if (pkg in protectedPkgs) return@Runnable
+            featureStep(pkg, Store.config.value, countBudget = false)
+        } catch (t: Throwable) {
+            Log.e(TAG, "scan", t)
+        }
+    }
+
     override fun onServiceConnected() {
         super.onServiceConnected()
         Store.init(this)
         Z.apply(Store.config.value)
         overlay = BlockOverlay(this)
-        refreshIgnored()
+        refreshLists()
         main.removeCallbacks(ticker)
         main.post(ticker)
+        Log.i(TAG, "SERVICE_CONNECTED")
     }
 
     override fun onInterrupt() {}
@@ -90,22 +109,42 @@ class GuardService : AccessibilityService() {
 
     private fun shutdown() {
         main.removeCallbacks(ticker)
+        main.removeCallbacks(quickScan)
         overlay?.hide()
         Store.flushDaily()
     }
 
     override fun onAccessibilityEvent(e: AccessibilityEvent?) {
         e ?: return
-        if (e.eventType != AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) return
         val pkg = e.packageName?.toString() ?: return
-        if (pkg in ignored) return
-        if (pkg != fgPkg) {
-            fgPkg = pkg
-            tick()
+        if (e.eventType == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) {
+            val cls = e.className?.toString()
+            if (cls != null && cls.endsWith("Activity")) activityByPkg[pkg] = cls
+            if (pkg !in ignored && pkg != packageName) {
+                val changed = pkg != eventPkg
+                eventPkg = pkg
+                if (changed) safeTick()
+            }
+        }
+        // Réagir vite quand le contenu de l'appli change (ouverture d'un Reel, d'une story…)
+        if (pkg in protectedPkgs || pkg in ignored) return
+        val cfg = Store.config.value
+        if (cfg.rules.values.none { it.enabled }) return
+        if (!scanPending) {
+            scanPending = true
+            main.postDelayed(quickScan, 250)
         }
     }
 
-    private fun refreshIgnored() {
+    private fun safeTick() {
+        try {
+            tick()
+        } catch (t: Throwable) {
+            Log.e(TAG, "tick", t)
+        }
+    }
+
+    private fun refreshLists() {
         try {
             val imm = getSystemService(InputMethodManager::class.java)
             val imes = imm.enabledInputMethodList.map { it.packageName }
@@ -113,31 +152,86 @@ class GuardService : AccessibilityService() {
         } catch (_: Exception) {
         }
         protectedPkgs = UsageRepo.protectedPackages(this)
-        ignoredAt = SystemClock.elapsedRealtime()
+        listsAt = SystemClock.elapsedRealtime()
+    }
+
+    // ---------------------------------------------------------------- appli au premier plan
+
+    private fun appWindows(): List<AccessibilityWindowInfo> = try {
+        windows.filter { it.type == AccessibilityWindowInfo.TYPE_APPLICATION }
+    } catch (e: Exception) {
+        emptyList()
+    }
+
+    /** Appli que l'utilisateur utilise vraiment : la fenêtre d'application qui a le focus. */
+    private fun currentApp(): String? {
+        val apps = appWindows()
+        val w = apps.firstOrNull { it.isFocused } ?: apps.firstOrNull { it.isActive }
+        val p = try {
+            w?.root?.packageName?.toString()
+        } catch (e: Exception) {
+            null
+        }
+        return p ?: eventPkg
+    }
+
+    private fun screenFor(pkg: String, withActivity: Boolean): ScreenCtx {
+        val wins = appWindows()
+        val roots = ArrayList<AccessibilityNodeInfo>()
+        val titles = ArrayList<String>()
+        for (w in wins) {
+            val r = try {
+                w.root
+            } catch (e: Exception) {
+                null
+            } ?: continue
+            if (r.packageName?.toString() == pkg) {
+                roots += r
+                w.title?.toString()?.let { titles += it }
+            }
+        }
+        if (roots.isEmpty()) {
+            rootInActiveWindow?.takeIf { it.packageName?.toString() == pkg }?.let { roots += it }
+        }
+        var activity = activityByPkg[pkg]
+        if (withActivity) {
+            val fromLog = try {
+                UsageRepo.lastResumedActivity(this, pkg, System.currentTimeMillis() - 30 * 60_000L)
+            } catch (e: Exception) {
+                null
+            }
+            if (fromLog != null) {
+                activity = fromLog
+                activityByPkg[pkg] = fromLog
+            }
+        }
+        val dm = resources.displayMetrics
+        return ScreenCtx(pkg, roots, activity, titles, dm.widthPixels, dm.heightPixels)
     }
 
     // ---------------------------------------------------------------- boucle 1 s
 
     private fun tick() {
+        Store.beat()
         val pm = getSystemService(PowerManager::class.java)
         if (!pm.isInteractive) return
         val nowElapsed = SystemClock.elapsedRealtime()
-        if (nowElapsed - ignoredAt > 60_000) refreshIgnored()
+        if (nowElapsed - listsAt > 60_000) refreshLists()
         if (nowElapsed - lastFlush > 10_000) {
             Store.flushDaily()
             lastFlush = nowElapsed
         }
 
-        val pkg = fgPkg ?: return
-        if (pkg in protectedPkgs) return
+        val pkg = currentApp() ?: return
+        if (pkg in protectedPkgs || pkg == packageName) return
         val cfg = Store.config.value
         val now = System.currentTimeMillis()
 
-        refreshUsageIfNeeded(nowElapsed)
+        refreshUsageIfNeeded(nowElapsed, pkg, cfg)
 
-        if (cfg.diagnostic && nowElapsed - lastDump > 3000) {
+        if (cfg.diagnostic && nowElapsed - lastDump > 2500) {
             lastDump = nowElapsed
-            rootInActiveWindow?.let { Store.setDump(Detector.dump(it)) }
+            Store.setDump(pkg, Detector.dump(screenFor(pkg, withActivity = true)))
         }
 
         // 1) Blocage de l'appli entière
@@ -148,18 +242,21 @@ class GuardService : AccessibilityService() {
         }
 
         // 2) Blocage d'une fonctionnalité à l'intérieur de l'appli
-        scanFeatures(pkg, cfg)
+        featureStep(pkg, cfg, countBudget = true)
     }
 
-    private fun refreshUsageIfNeeded(nowElapsed: Long) {
-        if (usageBusy || nowElapsed - usageAt < 5000) return
+    private fun refreshUsageIfNeeded(nowElapsed: Long, fg: String, cfg: Config) {
+        if (usageBusy || nowElapsed - usageAt < 4000) return
         usageBusy = true
         usageAt = nowElapsed
         val ctx = applicationContext
+        val log = cfg.isMonitored(fg)
         worker.execute {
             try {
                 usage = UsageRepo.perApp(ctx, UsageRepo.dayStart(LocalDate.now()), System.currentTimeMillis())
-            } catch (_: Throwable) {
+                if (log) Log.i(TAG, "USAGE pkg=$fg ms=${usage[fg] ?: 0L}")
+            } catch (t: Throwable) {
+                Log.e(TAG, "usage", t)
             } finally {
                 usageBusy = false
             }
@@ -203,7 +300,16 @@ class GuardService : AccessibilityService() {
     // ---------------------------------------------------------------- blocage appli
 
     private fun blockApp(pkg: String, reason: Reason) {
-        if (overlay?.isShowing == true) return
+        val nowElapsed = SystemClock.elapsedRealtime()
+        if (overlay?.isShowing == true) {
+            // L'écran de blocage est déjà là : on renvoie quand même à l'accueil si l'appli est revenue devant.
+            if (nowElapsed - lastAppBlock > 1500) {
+                lastAppBlock = nowElapsed
+                performGlobalAction(GLOBAL_ACTION_HOME)
+            }
+            return
+        }
+        lastAppBlock = nowElapsed
         val label = labelOf(pkg)
         val cfg = Store.config.value
         val extras = Store.daily().extras[pkg] ?: 0
@@ -211,13 +317,16 @@ class GuardService : AccessibilityService() {
         val title: String
         val detail: String
         var used = ""
+        val tag: String
         when (reason) {
             is Reason.Limit -> {
+                tag = "limit"
                 title = "Limite atteinte"
                 detail = "Tu as atteint ta limite de ${fmtMin(reason.limitMin)} sur $label aujourd'hui."
                 used = "Temps passé : ${fmtMin(reason.usedMin)}"
             }
             is Reason.Window -> {
+                tag = "schedule"
                 title = "$label est bloqué"
                 detail = if (reason.allDay) {
                     "Plage « ${reason.name} » : accès interdit toute la journée."
@@ -226,16 +335,18 @@ class GuardService : AccessibilityService() {
                 }
             }
             is Reason.Focus -> {
+                tag = "focus"
                 val left = ((reason.untilMs - System.currentTimeMillis()) / 60_000L).toInt() + 1
                 title = "Mode concentration"
                 detail = "$label est bloqué encore ${fmtMin(maxOf(left, 1))}."
             }
         }
+        Log.i(TAG, "BLOCK_APP pkg=$pkg reason=$tag")
         val canExtend = reason is Reason.Limit && !cfg.isStrict() && extras < cfg.extMax
 
         performGlobalAction(GLOBAL_ACTION_HOME)
-        fgPkg = null
-        overlay?.show(
+        eventPkg = null
+        val ok = overlay?.show(
             BlockInfo(
                 appLabel = label,
                 pkg = pkg,
@@ -250,17 +361,21 @@ class GuardService : AccessibilityService() {
                     Store.updateDaily { d -> d.copy(extras = d.extras + (pkg to ((d.extras[pkg] ?: 0) + 1))) }
                 },
             )
-        )
+        ) ?: false
+        if (!ok) Toast.makeText(this, "$title — $detail", Toast.LENGTH_LONG).show()
     }
 
     // ---------------------------------------------------------------- blocage fonctionnalité
 
-    private fun scanFeatures(pkg: String, cfg: Config) {
+    private fun featureStep(pkg: String, cfg: Config, countBudget: Boolean) {
         val defs = cfg.allFeatures().filter { it.pkg == pkg && cfg.rules[it.id]?.enabled == true }
         if (defs.isEmpty()) return
-        val root = rootInActiveWindow ?: return
-        if (root.packageName?.toString() != pkg) return
-        val hits = Detector.detect(root, defs)
+        val nowElapsed = SystemClock.elapsedRealtime()
+        // Laisse le temps au « retour » de faire son effet avant de re-vérifier.
+        if (nowElapsed - lastFeatureAction < 1200) return
+        val needActivity = countBudget && defs.any { it.activities.isNotEmpty() }
+        val hits = Detector.detect(screenFor(pkg, needActivity), defs)
+        if (hits.isEmpty()) return
         for (d in hits) {
             val rc = cfg.rules[d.id] ?: continue
             val used = Store.daily().featureSec[d.id] ?: 0
@@ -268,22 +383,33 @@ class GuardService : AccessibilityService() {
                 enforceFeature(d, rc.budgetMin == 0)
                 return
             }
+        }
+        if (countBudget) {
+            val ids = hits.map { it.id }.toSet()
             Store.updateDaily(persist = false) { day ->
-                day.copy(featureSec = day.featureSec + (d.id to ((day.featureSec[d.id] ?: 0) + 1)))
+                var f = day.featureSec
+                ids.forEach { id -> f = f + (id to ((f[id] ?: 0) + 1)) }
+                day.copy(featureSec = f)
             }
         }
     }
 
     private fun enforceFeature(d: FeatureDef, hard: Boolean) {
         val now = SystemClock.elapsedRealtime()
-        // Si le « retour » n'a pas suffi, on renvoie à l'accueil.
-        val repeated = now - lastEnforce < 4000
-        lastEnforce = now
+        // Si le « retour » n'a pas suffi juste avant, on renvoie à l'accueil.
+        val repeated = now - lastFeatureAction < 5000 && lastFeatureId == d.id
         val goHome = repeated || !Store.config.value.featureBack
         performGlobalAction(if (goHome) GLOBAL_ACTION_HOME else GLOBAL_ACTION_BACK)
-        val appName = labelOf(d.pkg)
-        val msg = if (hard) "${d.title} est bloqué sur $appName" else "Budget ${d.title} épuisé pour aujourd'hui"
-        Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
+        lastFeatureAction = now
+        lastFeatureId = d.id
+        // L'activité mémorisée ne doit pas redéclencher le blocage si l'utilisateur est déjà ressorti.
+        if (d.activities.isNotEmpty()) activityByPkg.remove(d.pkg)
+        Log.i(TAG, "BLOCK_FEATURE id=${d.id} action=${if (goHome) "home" else "back"}")
+        if (!repeated) {
+            val appName = labelOf(d.pkg)
+            val msg = if (hard) "${d.title} est bloqué sur $appName" else "Budget ${d.title} épuisé pour aujourd'hui"
+            Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
+        }
     }
 
     private fun labelOf(pkg: String): String = try {

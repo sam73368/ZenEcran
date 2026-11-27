@@ -39,7 +39,19 @@ object UsageRepo {
     fun dayStart(date: LocalDate): Long =
         date.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
 
-    /** Temps passé au premier plan, par appli, entre from et to (ms). */
+    private const val EV_RESUMED = 1
+    private const val EV_PAUSED = 2
+    private const val EV_SCREEN_OFF = 16
+    private const val EV_KEYGUARD_SHOWN = 17
+    private const val EV_STOPPED = 23
+    private const val EV_SHUTDOWN = 26
+
+    /**
+     * Temps passé au premier plan, par appli, entre from et to (ms).
+     * Une seule appli est au premier plan à la fois : on ferme la session en cours dès qu'une autre appli
+     * passe devant, que l'écran s'éteint ou se verrouille. Une appli ne « s'arrête » que lorsque toutes
+     * ses activités ont été mises en pause (changer d'écran dans une appli ne coupe pas le compteur).
+     */
     fun perApp(ctx: Context, from: Long, to: Long): Map<String, Long> {
         val usm = ctx.getSystemService(Context.USAGE_STATS_SERVICE) as UsageStatsManager
         val events = try {
@@ -48,27 +60,75 @@ object UsageRepo {
             null
         } ?: return emptyMap()
         val ev = UsageEvents.Event()
-        val starts = HashMap<String, Long>()
         val totals = HashMap<String, Long>()
+        var cur: String? = null
+        var curStart = 0L
+        val resumed = HashSet<String>()
+        var seenActivity = false
+
+        fun add(pkg: String, ms: Long) {
+            if (ms > 0) totals[pkg] = (totals[pkg] ?: 0L) + ms
+        }
+        fun close(t: Long) {
+            val p = cur ?: return
+            add(p, t - curStart)
+            cur = null
+            resumed.clear()
+        }
+
         while (events.hasNextEvent()) {
             events.getNextEvent(ev)
-            val key = ev.packageName + "/" + (ev.className ?: "")
+            val t = ev.timeStamp
+            val pkg = ev.packageName ?: continue
+            val cls = ev.className ?: ""
             when (ev.eventType) {
-                UsageEvents.Event.ACTIVITY_RESUMED -> starts[key] = ev.timeStamp
-                UsageEvents.Event.ACTIVITY_PAUSED -> {
-                    val s = starts.remove(key)
-                    if (s != null && ev.timeStamp > s) {
-                        totals[ev.packageName] = (totals[ev.packageName] ?: 0L) + (ev.timeStamp - s)
+                EV_RESUMED -> {
+                    seenActivity = true
+                    if (cur != pkg) {
+                        close(t)
+                        cur = pkg
+                        curStart = t
+                    }
+                    resumed += cls
+                }
+                EV_PAUSED, EV_STOPPED -> {
+                    if (cur == null && !seenActivity && ev.eventType == EV_PAUSED) {
+                        // Appli déjà ouverte avant le début de la période (ex. avant minuit).
+                        add(pkg, t - from)
+                    }
+                    seenActivity = true
+                    if (cur == pkg) {
+                        resumed -= cls
+                        if (resumed.isEmpty()) close(t)
                     }
                 }
+                EV_SCREEN_OFF, EV_KEYGUARD_SHOWN, EV_SHUTDOWN -> close(t)
             }
         }
-        // Activités encore au premier plan à la fin de la période.
-        starts.forEach { (key, s) ->
-            val pkg = key.substringBefore('/')
-            if (to > s) totals[pkg] = (totals[pkg] ?: 0L) + (to - s)
-        }
+        close(to)
         return totals
+    }
+
+    /** Dernière activité (écran) ouverte par cette appli depuis [since], d'après le journal d'Android. */
+    fun lastResumedActivity(ctx: Context, pkg: String, since: Long): String? {
+        val usm = ctx.getSystemService(Context.USAGE_STATS_SERVICE) as UsageStatsManager
+        val events = try {
+            usm.queryEvents(since, System.currentTimeMillis())
+        } catch (e: Exception) {
+            null
+        } ?: return null
+        val ev = UsageEvents.Event()
+        var last: String? = null
+        while (events.hasNextEvent()) {
+            events.getNextEvent(ev)
+            if (ev.eventType == EV_RESUMED && ev.packageName == pkg) last = ev.className
+        }
+        return last
+    }
+
+    fun isBatteryUnrestricted(ctx: Context): Boolean {
+        val pm = ctx.getSystemService(Context.POWER_SERVICE) as android.os.PowerManager
+        return pm.isIgnoringBatteryOptimizations(ctx.packageName)
     }
 
     /** Totaux des 7 derniers jours (le dernier = aujourd'hui). */

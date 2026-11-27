@@ -28,6 +28,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.produceState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -254,4 +255,95 @@ fun openAppInfo(ctx: Context) {
         Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:${ctx.packageName}"))
             .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
     )
+}
+
+fun openBatterySettings(ctx: Context) {
+    try {
+        @android.annotation.SuppressLint("BatteryLife")
+        val i = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS, Uri.parse("package:${ctx.packageName}"))
+        ctx.startActivity(i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+    } catch (e: Exception) {
+        ctx.startActivity(Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+    }
+}
+
+@Composable
+private fun StatusRow(label: String, ok: Boolean, action: String, onClick: () -> Unit) {
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .padding(vertical = 6.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Box(
+            Modifier
+                .size(22.dp)
+                .clip(androidx.compose.foundation.shape.CircleShape)
+                .background(if (ok) Z.teal else Z.red),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text(if (ok) "✓" else "!", color = Z.onTeal, fontSize = 13.sp, fontWeight = FontWeight.Bold)
+        }
+        Spacer(Modifier.width(12.dp))
+        Text(label, color = Z.textHi, fontSize = 14.sp, modifier = Modifier.weight(1f))
+        if (!ok) {
+            androidx.compose.material3.TextButton(onClick = onClick) { Text(action, color = Z.teal) }
+        }
+    }
+}
+
+/**
+ * État réel de l'appli : autorisations et service qui tourne vraiment (il « bat » chaque seconde).
+ * alwaysShow = false : n'apparaît que s'il manque quelque chose.
+ */
+@Composable
+fun StatusCard(ui: UiState, alwaysShow: Boolean) {
+    val ctx = LocalContext.current
+    val beat by com.zenecran.data.Store.beat.collectAsState()
+    val now by produceState(android.os.SystemClock.elapsedRealtime()) {
+        while (true) {
+            kotlinx.coroutines.delay(1000)
+            value = android.os.SystemClock.elapsedRealtime()
+        }
+    }
+    val alive = beat > 0 && now - beat < 5000
+    val allOk = ui.hasUsage && ui.hasAccessibility && alive && ui.batteryOk
+    if (!alwaysShow && allOk) return
+    ZenCard {
+        Text(
+            if (allOk) "Tout fonctionne" else "À configurer",
+            color = if (allOk) Z.teal else Z.amber, fontSize = 16.sp, fontWeight = FontWeight.SemiBold,
+        )
+        Spacer(Modifier.height(4.dp))
+        StatusRow("Accès aux statistiques d'utilisation", ui.hasUsage, "Autoriser") { openUsageAccess(ctx) }
+        StatusRow(
+            when {
+                !ui.hasAccessibility -> "Service de blocage désactivé"
+                !alive -> "Service activé mais ne répond pas"
+                else -> "Service de blocage actif"
+            },
+            ui.hasAccessibility && alive,
+            "Activer",
+        ) { openAccessibility(ctx) }
+        StatusRow("Batterie sans restriction", ui.batteryOk, "Autoriser") { openBatterySettings(ctx) }
+        if (!ui.hasAccessibility) {
+            Spacer(Modifier.height(4.dp))
+            Text(
+                "Réglages → Accessibilité → Applis installées → Zen Écran → activer. " +
+                    "Si c'est grisé (Android 13+) : « Infos de l'appli » → menu ⋮ en haut à droite → " +
+                    "« Autoriser les paramètres restreints », puis réessaie.",
+                color = Z.textLo, fontSize = 12.sp,
+            )
+            androidx.compose.material3.TextButton(onClick = { openAppInfo(ctx) }) {
+                Text("Ouvrir les infos de l'appli", color = Z.teal)
+            }
+        } else if (!alive) {
+            Spacer(Modifier.height(4.dp))
+            Text(
+                "Android a arrêté le service. Désactive puis réactive Zen Écran dans Accessibilité, " +
+                    "et autorise la batterie sans restriction pour éviter que ça recommence.",
+                color = Z.textLo, fontSize = 12.sp,
+            )
+        }
+    }
 }

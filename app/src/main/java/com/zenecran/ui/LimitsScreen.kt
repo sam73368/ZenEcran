@@ -3,6 +3,7 @@ package com.zenecran.ui
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -52,7 +53,7 @@ import com.zenecran.data.Store
 import com.zenecran.data.fmtMin
 import com.zenecran.data.fmtMs
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
 @Composable
 fun LimitsScreen(vm: MainViewModel, padding: PaddingValues) {
     val ui by vm.ui.collectAsState()
@@ -91,16 +92,16 @@ fun LimitsScreen(vm: MainViewModel, padding: PaddingValues) {
                     Text("Suggestions", color = Z.textHi, fontWeight = FontWeight.SemiBold)
                     Text("Les applis qui aspirent le plus de temps. Un tap = limite de 30 min.", color = Z.textLo, fontSize = 13.sp)
                     Spacer(Modifier.height(12.dp))
-                    suggestions.chunked(3).forEach { row ->
-                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            row.forEach { app ->
-                                Button(
-                                    onClick = { vm.addApp(app.pkg) },
-                                    colors = ButtonDefaults.buttonColors(containerColor = Z.cardHi, contentColor = Z.textHi),
-                                ) { Text("+ ${app.label}", fontSize = 13.sp) }
-                            }
+                    FlowRow(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        suggestions.forEach { app ->
+                            Button(
+                                onClick = { vm.addApp(app.pkg) },
+                                colors = ButtonDefaults.buttonColors(containerColor = Z.cardHi, contentColor = Z.textHi),
+                            ) { Text("+ ${app.label}", fontSize = 13.sp) }
                         }
-                        Spacer(Modifier.height(6.dp))
                     }
                 }
             }

@@ -48,6 +48,9 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LifecycleRegistry
 import androidx.lifecycle.setViewTreeLifecycleOwner
+import androidx.lifecycle.ViewModelStore
+import androidx.lifecycle.ViewModelStoreOwner
+import androidx.lifecycle.setViewTreeViewModelStoreOwner
 import androidx.savedstate.SavedStateRegistry
 import androidx.savedstate.SavedStateRegistryController
 import androidx.savedstate.SavedStateRegistryOwner
@@ -78,13 +81,15 @@ class BlockOverlay(private val service: AccessibilityService) {
 
     val isShowing: Boolean get() = view != null
 
-    fun show(info: BlockInfo) {
+    /** Affiche l'écran de blocage. Renvoie false si Android l'a refusé. */
+    fun show(info: BlockInfo): Boolean {
         hide()
         val o = OverlayOwner()
         o.resume()
         val v = ComposeView(service)
         v.setViewTreeLifecycleOwner(o)
         v.setViewTreeSavedStateRegistryOwner(o)
+        v.setViewTreeViewModelStoreOwner(o)
         v.setContent {
             ZenTheme {
                 BlockScreen(info = info, onClose = { hide() })
@@ -97,12 +102,15 @@ class BlockOverlay(private val service: AccessibilityService) {
             WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
             PixelFormat.TRANSLUCENT,
         )
-        try {
+        return try {
             wm.addView(v, lp)
             view = v
             owner = o
+            true
         } catch (e: Exception) {
+            android.util.Log.e("ZenEcran", "overlay", e)
             o.destroy()
+            false
         }
     }
 
@@ -119,9 +127,10 @@ class BlockOverlay(private val service: AccessibilityService) {
     }
 }
 
-private class OverlayOwner : LifecycleOwner, SavedStateRegistryOwner {
+private class OverlayOwner : LifecycleOwner, SavedStateRegistryOwner, ViewModelStoreOwner {
     private val registry = LifecycleRegistry(this)
     private val controller = SavedStateRegistryController.create(this)
+    override val viewModelStore = ViewModelStore()
 
     override val lifecycle: Lifecycle get() = registry
     override val savedStateRegistry: SavedStateRegistry get() = controller.savedStateRegistry
@@ -137,6 +146,7 @@ private class OverlayOwner : LifecycleOwner, SavedStateRegistryOwner {
 
     fun destroy() {
         registry.currentState = Lifecycle.State.DESTROYED
+        viewModelStore.clear()
     }
 }
 

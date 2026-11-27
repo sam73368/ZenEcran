@@ -15,3 +15,5 @@ dependencyResolutionManagement {
 
 rootProject.name = "ZenEcran"
 include(":app")
+// Fausses applis pour les tests sur émulateur uniquement
+include(":fake-instagram", ":fake-facebook")

@@ -19,8 +19,17 @@ object Store {
     private val _daily = MutableStateFlow(Daily(day = today()))
     val daily: StateFlow<Daily> = _daily.asStateFlow()
 
-    private val _dump = MutableStateFlow("")
-    val dump: StateFlow<String> = _dump.asStateFlow()
+    /** Dernière capture du Mode diagnostic, par appli. */
+    private val _dumps = MutableStateFlow<Map<String, String>>(emptyMap())
+    val dumps: StateFlow<Map<String, String>> = _dumps.asStateFlow()
+
+    /** Dernier « battement » du service (SystemClock.elapsedRealtime), pour savoir s'il tourne vraiment. */
+    private val _beat = MutableStateFlow(0L)
+    val beat: StateFlow<Long> = _beat.asStateFlow()
+
+    fun beat() {
+        _beat.value = android.os.SystemClock.elapsedRealtime()
+    }
 
     fun today(): String = LocalDate.now().toString()
 
@@ -54,8 +63,12 @@ object Store {
         prefs?.edit()?.putString("daily", encodeDaily(_daily.value))?.apply()
     }
 
-    fun setDump(s: String) {
-        _dump.value = s
+    fun setDump(pkg: String, s: String) {
+        _dumps.value = _dumps.value + (pkg to s)
+    }
+
+    fun clearDumps() {
+        _dumps.value = emptyMap()
     }
 
     private fun rollover() {
@@ -95,6 +108,7 @@ object Store {
                     .put("title", r.title)
                     .put("labels", JSONArray(r.selectedLabels))
                     .put("ids", JSONArray(r.ids))
+                    .put("acts", JSONArray(r.activities))
             )
         }
         o.put("custom", custom)
@@ -153,7 +167,9 @@ object Store {
                     x.optJSONArray("labels")?.let { a -> for (j in 0 until a.length()) lb += a.getString(j) }
                     val ids = mutableListOf<String>()
                     x.optJSONArray("ids")?.let { a -> for (j in 0 until a.length()) ids += a.getString(j) }
-                    custom += CustomRule(x.getString("id"), x.getString("pkg"), x.optString("title", "Règle"), lb, ids)
+                    val acts = mutableListOf<String>()
+                    x.optJSONArray("acts")?.let { a -> for (j in 0 until a.length()) acts += a.getString(j) }
+                    custom += CustomRule(x.getString("id"), x.getString("pkg"), x.optString("title", "Règle"), lb, ids, acts)
                 }
             }
             Config(

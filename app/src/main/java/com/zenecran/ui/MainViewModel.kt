@@ -21,6 +21,7 @@ import java.util.UUID
 data class UiState(
     val hasUsage: Boolean = true,
     val hasAccessibility: Boolean = true,
+    val batteryOk: Boolean = true,
     val perApp: Map<String, Long> = emptyMap(),
     val total: Long = 0L,
     val week: List<Long> = List(7) { 0L },
@@ -44,6 +45,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         viewModelScope.launch(Dispatchers.Default) {
             val usage = UsageRepo.hasUsageAccess(ctx)
             val acc = UsageRepo.isAccessibilityOn(ctx)
+            val battery = UsageRepo.isBatteryUnrestricted(ctx)
             val countable = UsageRepo.userPackages(ctx)
             var perApp: Map<String, Long> = emptyMap()
             var week: List<Long> = List(7) { 0L }
@@ -53,7 +55,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                 week = UsageRepo.weekTotals(ctx, countable)
             }
             val installed = _ui.value.installed.ifEmpty { UsageRepo.launchableApps(ctx) }
-            _ui.value = UiState(usage, acc, perApp, perApp.values.sum(), week, installed, true)
+            _ui.value = UiState(usage, acc, battery, perApp, perApp.values.sum(), week, installed, true)
         }
     }
 
@@ -167,7 +169,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     fun setDiagnostic(on: Boolean) {
         Store.updateConfig { it.copy(diagnostic = on) }
-        if (!on) Store.setDump("")
+        if (!on) Store.clearDumps()
     }
 
     // ------------------------------------------------------------ personnalisation
